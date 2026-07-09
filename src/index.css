@@ -53,6 +53,7 @@
   --spacing-content-hero: 800px;
   --spacing-content-form: 600px;
   --spacing-sub-nav: 52px;
+  --breakpoint-nav-collapse: 834px;
 
   --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.22);
   --border-width-pearl: 3px;
