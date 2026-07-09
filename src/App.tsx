@@ -4,6 +4,7 @@ import { initLenis } from './utils/lenis';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
+import ProjectDetail from './pages/ProjectDetail';
 
 function App() {
   useEffect(() => {
@@ -17,7 +18,7 @@ function App() {
         <main className="flex-grow pt-nav">
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/projects/:slug" element={<div>Project Detail Placeholder</div>} />
+            <Route path="/projects/:slug" element={<ProjectDetail />} />
           </Routes>
         </main>
         <Footer />
