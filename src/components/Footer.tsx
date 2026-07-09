@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 export default function Footer() {
   return (
     <footer className="bg-canvas-parchment text-ink-muted-80 px-xl py-xxl border-t border-hairline font-apple-text">
-      <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-xl">
+      <div className="max-w-content-max mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-xl">
         <div>
           <h4 className="text-caption-strong text-ink mb-sm">Sitemap</h4>
           <ul className="flex flex-col">
@@ -27,7 +27,7 @@ export default function Footer() {
           </p>
         </div>
       </div>
-      <div className="max-w-[1440px] mx-auto mt-xl pt-lg border-t border-hairline flex flex-col md:flex-row justify-between items-start md:items-center gap-sm">
+      <div className="max-w-content-max mx-auto mt-xl pt-lg border-t border-hairline flex flex-col md:flex-row justify-between items-start md:items-center gap-sm">
         <span className="text-fine-print text-ink-muted-48">
           Copyright © 2026 Akrom. All rights reserved.
         </span>

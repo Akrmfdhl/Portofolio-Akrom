@@ -43,9 +43,14 @@
   --spacing-xl: 32px;
   --spacing-xxl: 48px;
   --spacing-section: 80px;
+  --spacing-nav: 44px;
+  --spacing-content-max: 1440px;
 
   --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.22);
   --border-width-pearl: 3px;
+
+  --font-apple-display: SF Pro Display, system-ui, -apple-system, 'Inter', sans-serif;
+  --font-apple-text: SF Pro Text, system-ui, -apple-system, 'Inter', sans-serif;
 }
 
 body {
