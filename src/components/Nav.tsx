@@ -24,24 +24,24 @@ export default function Nav() {
             AKROM
           </Link>
           <div className="hidden nav-collapse:flex items-center gap-xl">
-            <a
-              href="/#about"
+            <Link
+              to="/#about"
               className="hover:opacity-80 transition-opacity"
             >
               About
-            </a>
-            <a
-              href="/#projects"
+            </Link>
+            <Link
+              to="/#projects"
               className="hover:opacity-80 transition-opacity"
             >
               Projects
-            </a>
-            <a
-              href="/#contact"
+            </Link>
+            <Link
+              to="/#contact"
               className="hover:opacity-80 transition-opacity"
             >
               Contact
-            </a>
+            </Link>
           </div>
         </div>
         <div className="hidden nav-collapse:flex items-center gap-lg">
@@ -102,27 +102,27 @@ export default function Nav() {
             variants={menuVariants}
             className="absolute top-nav left-0 right-0 bg-surface-black text-on-dark flex flex-col items-start gap-md p-lg border-t border-hairline/10 nav-collapse:hidden overflow-hidden"
           >
-            <a
-              href="/#about"
+            <Link
+              to="/#about"
               onClick={() => setIsOpen(false)}
               className="w-full text-left py-xs hover:opacity-80 transition-opacity border-b border-hairline/5"
             >
               About
-            </a>
-            <a
-              href="/#projects"
+            </Link>
+            <Link
+              to="/#projects"
               onClick={() => setIsOpen(false)}
               className="w-full text-left py-xs hover:opacity-80 transition-opacity border-b border-hairline/5"
             >
               Projects
-            </a>
-            <a
-              href="/#contact"
+            </Link>
+            <Link
+              to="/#contact"
               onClick={() => setIsOpen(false)}
               className="w-full text-left py-xs hover:opacity-80 transition-opacity border-b border-hairline/5"
             >
               Contact
-            </a>
+            </Link>
             <div className="flex w-full justify-between items-center mt-sm">
               <a
                 href="/resume.pdf"

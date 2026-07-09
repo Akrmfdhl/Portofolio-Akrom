@@ -5,6 +5,7 @@ import Nav from './components/Nav';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
 import ProjectDetail from './pages/ProjectDetail';
+import ScrollToHash from './components/ScrollToHash';
 
 function App() {
   useEffect(() => {
@@ -13,6 +14,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToHash />
       <div className="flex flex-col min-h-screen bg-canvas text-ink selection:bg-primary selection:text-on-primary">
         <Nav />
         <main className="flex-grow pt-nav">
