@@ -1,31 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @import "tailwindcss";
 
-@import "@fontsource/inter/300.css";
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/inter/700.css";
-
 @theme {
-  --color-primary: #0066cc;
-  --color-primary-focus: #0071e3;
-  --color-primary-on-dark: #2997ff;
-  --color-ink: #1d1d1f;
+  --color-primary: #00D2FF;
+  --color-primary-focus: #33E0FF;
+  --color-primary-on-dark: #00D2FF;
+  --color-ink: #F5F5F7;
   --color-body-on-dark: #ffffff;
-  --color-body-muted: #cccccc;
-  --color-ink-muted-80: #333333;
-  --color-ink-muted-48: #7a7a7a;
-  --color-divider-soft: #f0f0f0;
-  --color-hairline: #e0e0e0;
-  --color-canvas: #ffffff;
-  --color-canvas-parchment: #f5f5f7;
-  --color-surface-pearl: #fafafc;
-  --color-surface-tile-1: #272729;
-  --color-surface-tile-2: #2a2a2c;
-  --color-surface-tile-3: #252527;
-  --color-surface-black: #000000;
-  --color-surface-chip-translucent: rgba(210, 210, 215, 0.64);
-  --color-on-primary: #ffffff;
+  --color-body-muted: #a1a1a6;
+  --color-ink-muted-80: #e0e0e5;
+  --color-ink-muted-48: #7a7a7f;
+  --color-divider-soft: #25262b;
+  --color-hairline: #202126;
+  --color-canvas: #0D0E11;
+  --color-canvas-parchment: #14161b;
+  --color-surface-pearl: #121317;
+  --color-surface-tile-1: #0F1013;
+  --color-surface-tile-2: #18191E;
+  --color-surface-tile-3: #131418;
+  --color-surface-black: #090A0C;
+  --color-surface-chip-translucent: rgba(255, 255, 255, 0.08);
+  --color-on-primary: #000000;
   --color-on-dark: #ffffff;
+
+  --color-tech-react: #00D2FF;
+  --color-tech-typescript: #3178C6;
+  --color-tech-tailwind: #06B6D4;
+  --color-tech-go: #00ADD8;
+  --color-tech-postgres: #336791;
+  --color-tech-docker: #2496ED;
+  --color-tech-kotlin: #7F52FF;
+  --color-tech-gsap: #88CE02;
+  --color-tech-framer: #FF00C7;
+  --color-tech-router: #F44250;
+  --color-tech-gin: #00ADD8;
+  --color-tech-gorm: #326CE5;
+  --color-tech-redis: #D82C20;
+
+  --color-mac-red: #FF5F56;
+  --color-mac-yellow: #FFBD2E;
+  --color-mac-green: #27C93F;
 
   --radius-none: 0px;
   --radius-xs: 5px;
@@ -54,28 +69,35 @@
   --spacing-content-form: 600px;
   --spacing-sub-nav: 52px;
   --breakpoint-nav-collapse: 834px;
+  --spacing-card-preview-h: 380px;
+  --spacing-card-img-h: 220px;
+  --spacing-poster-w: 220px;
+  --spacing-poster-h: 140px;
+  --spacing-viewer-size: 320px;
+  --spacing-profile-w: 340px;
+  --spacing-profile-inner-w: 280px;
 
-  --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.22);
+  --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.4);
   --border-width-pearl: 3px;
 
-  --font-apple-display: SF Pro Display, system-ui, -apple-system, 'Inter', sans-serif;
-  --font-apple-text: SF Pro Text, system-ui, -apple-system, 'Inter', sans-serif;
+  --font-apple-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-apple-text: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--color-canvas);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
 }
 
 .font-apple-display {
-  font-family: SF Pro Display, system-ui, -apple-system, 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   font-feature-settings: "ss03";
 }
 
 .font-apple-text {
-  font-family: SF Pro Text, system-ui, -apple-system, 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   font-feature-settings: "ss03";
 }
 
@@ -187,4 +209,62 @@ body {
 *:focus-visible {
   outline: 2px solid var(--color-primary-focus) !important;
   outline-offset: 2px;
+}
+
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+  mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 75%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mini-badge-react {
+  color: var(--color-tech-react);
+  background-color: rgba(0, 210, 255, 0.1);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+}
+
+.mini-badge-go {
+  color: var(--color-tech-go);
+  background-color: rgba(0, 173, 216, 0.1);
+  border: 1px solid rgba(0, 173, 216, 0.2);
+}
+
+.mini-badge-kotlin {
+  color: var(--color-tech-kotlin);
+  background-color: rgba(127, 82, 255, 0.1);
+  border: 1px solid rgba(127, 82, 255, 0.2);
+}
+
+html.lenis, html.lenis-scrolling {
+  scroll-behavior: auto !important;
+}
+
+html.lenis-prevent {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overflow: clip;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }

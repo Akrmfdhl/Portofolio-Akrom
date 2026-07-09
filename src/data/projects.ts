@@ -1,3 +1,8 @@
+import catatCrypto from '../assets/catat-crypto.png';
+import lmsCurriculum from '../assets/lms-curriculum.png';
+import blocksim from '../assets/blocksim.png';
+import tiss from '../assets/tiss.png';
+
 export interface Project {
   slug: string;
   name: string;
@@ -24,12 +29,12 @@ export const projects: Project[] = [
     approach: 'Contributed modular UI widgets for tracking transaction history and integrated wallet APIs to sync balances.',
     outcome: 'Delivered cleaner, more resilient transactions history displays and reduced component load times by ~15%.',
     stack: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-    screenshotUrl: '/assets/catat-crypto.png',
-    githubUrl: 'https://github.com/example/catat-crypto',
+    screenshotUrl: catatCrypto,
+    githubUrl: 'https://github.com/Akrmfdhl/catat-crypto',
     isPrivate: false
   },
   {
-    slug: 'lms-curriculum-ui',
+    slug: 'lms-curriculum',
     name: 'LMS Curriculum UI',
     role: 'Contributor',
     copyFraming: 'Contributor — feature branch, curriculum UI',
@@ -38,8 +43,8 @@ export const projects: Project[] = [
     approach: 'Owned the implementation of the drag-and-drop course-builder interface and course outline preview panels.',
     outcome: 'Shipped modular layout interfaces supporting nesting levels up to four courses deep.',
     stack: ['React', 'TypeScript', 'Tailwind CSS', 'Dnd Kit'],
-    screenshotUrl: '/assets/lms-curriculum.png',
-    githubUrl: 'https://github.com/example/lms-curriculum-ui',
+    screenshotUrl: lmsCurriculum,
+    githubUrl: 'https://github.com/Akrmfdhl/lms-curriculum-ui',
     isPrivate: false
   },
   {
@@ -52,7 +57,7 @@ export const projects: Project[] = [
     approach: 'Contributed Android frontend client logic in Kotlin and Jetpack Compose to display node logs in real time.',
     outcome: 'Successfully visualized node transitions under latency ranges of 50ms to 2000ms.',
     stack: ['Kotlin', 'Jetpack Compose', 'Go', 'gRPC'],
-    screenshotUrl: '/assets/blocksim.png',
+    screenshotUrl: blocksim,
     isPrivate: true
   },
   {
@@ -65,7 +70,7 @@ export const projects: Project[] = [
     approach: 'Led the backend service refactor in Go, implemented Redis-backed event channels, and designed React dashboards.',
     outcome: 'Successfully unified nodes with latency under 100ms and reduced replication failures to zero.',
     stack: ['Go', 'Gin', 'GORM', 'Postgres', 'Redis', 'Docker', 'React', 'TypeScript'],
-    screenshotUrl: '/assets/tiss.png',
+    screenshotUrl: tiss,
     isPrivate: true
   }
 ];

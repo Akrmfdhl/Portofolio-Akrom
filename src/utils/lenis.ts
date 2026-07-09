@@ -20,11 +20,11 @@ export function initLenis() {
 
   lenisInstance.on('scroll', ScrollTrigger.update);
 
-  gsap.ticker.add((time) => {
-    lenisInstance?.raf(time * 1000);
-  });
-
-  gsap.ticker.lagSmoothing(0);
+  function raf(time: number) {
+    lenisInstance?.raf(time);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
 
   return lenisInstance;
 }

@@ -6,11 +6,13 @@ export default function ScrollToHash() {
   const { pathname, hash } = useLocation();
 
   useEffect(() => {
+    const lenis = getLenis();
+
     if (hash) {
-      const target = document.querySelector(hash) as HTMLElement | null;
+      const cleanHash = hash.replace('#', '');
+      const target = document.getElementById(cleanHash);
       if (target) {
         const timer = setTimeout(() => {
-          const lenis = getLenis();
           if (lenis) {
             lenis.scrollTo(target);
           } else {
@@ -20,7 +22,6 @@ export default function ScrollToHash() {
         return () => clearTimeout(timer);
       }
     } else {
-      const lenis = getLenis();
       if (lenis) {
         lenis.scrollTo(0, { immediate: true });
       } else {
