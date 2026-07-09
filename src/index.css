@@ -45,6 +45,13 @@
   --spacing-section: 80px;
   --spacing-nav: 44px;
   --spacing-content-max: 1440px;
+  --spacing-chip-x: 16px;
+  --spacing-btn-large-x: 28px;
+  --spacing-btn-large-y: 14px;
+  --spacing-btn-dark-x: 15px;
+  --spacing-content-text: 980px;
+  --spacing-content-hero: 800px;
+  --spacing-content-form: 600px;
 
   --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.22);
   --border-width-pearl: 3px;

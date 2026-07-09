@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { initLenis } from './utils/lenis';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
+import Landing from './pages/Landing';
 
 function App() {
   useEffect(() => {
@@ -15,7 +16,7 @@ function App() {
         <Nav />
         <main className="flex-grow pt-nav">
           <Routes>
-            <Route path="/" element={<div className="h-[200vh]">Landing Page Placeholder</div>} />
+            <Route path="/" element={<Landing />} />
             <Route path="/projects/:slug" element={<div>Project Detail Placeholder</div>} />
           </Routes>
         </main>
