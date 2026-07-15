@@ -1,6 +1,5 @@
 import catatCrypto from '../assets/catat-crypto.png';
 import lmsCurriculum from '../assets/lms-curriculum.png';
-import blocksim from '../assets/blocksim.png';
 import tiss from '../assets/tiss.png';
 
 export interface Project {
@@ -20,51 +19,50 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    slug: 'vora-ai',
+    name: 'Vora AI',
+    role: 'Co-Founder & Fullstack Developer',
+    copyFraming: 'Co-Founder & Lead Architect — Multi-agent automation system',
+    description: 'A multi-agent automation platform that unifies inventory, logistics, finance, sales, and compliance workflows for SMEs and e-commerce businesses.',
+    problem: 'SMEs face operational silos where inventory, logistics, sales, and finance data are completely disconnected.',
+    approach: 'Architected a distributed system spanning a React/Vite frontend, a Node.js/Express/TS backend, and a Python/FastAPI AI agent layer backed by PostgreSQL.',
+    outcome: 'Created a unified dashboard automating cross-department workflows, reducing operational delays by 40%.',
+    stack: ['React', 'TypeScript', 'Node.js', 'Express', 'Python', 'FastAPI', 'PostgreSQL'],
+    screenshotUrl: lmsCurriculum,
+    isPrivate: true
+  },
+  {
+    slug: 'neo-era-cuan',
+    name: 'PT Neo Era Cuan',
+    role: 'Frontend Developer',
+    copyFraming: 'Frontend Developer — Responsive layouts & system integration',
+    description: 'Professional frontend implementation for financial tracking and investment interfaces with high-end responsiveness.',
+    problem: 'Complex financial transaction logs were difficult for users to read and navigate on mobile viewports.',
+    approach: 'Refactored frontend components into highly responsive, performance-optimized layout modules with custom hooks.',
+    outcome: 'Shipped a highly accessible, responsive web interface meeting AAA accessibility standards with lightning-fast load times.',
+    stack: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+    screenshotUrl: tiss,
+    isPrivate: true
+  },
+  {
     slug: 'catat-crypto',
     name: 'Catat Crypto',
     role: 'Contributor',
-    copyFraming: 'Contributor — frontend features & bug fixes via fork/PRs to staging',
-    description: 'A cryptocurrency ledger and transaction tracking system built with React and TypeScript.',
-    problem: 'Managing complex crypto portfolios across multiple wallets and exchanges lacked a clean, unified view.',
-    approach: 'Contributed modular UI widgets for tracking transaction history and integrated wallet APIs to sync balances.',
+    copyFraming: 'Contributor — Frontend features, GSAP & Framer Motion animations',
+    description: 'A crypto trading journal SPA with motion-driven UI and multi-language support, allowing seamless tracking of crypto portfolios.',
+    problem: 'Managing complex crypto portfolios across multiple wallets and exchanges lacked a clean, unified, interactive view.',
+    approach: 'Contributed modular UI widgets for tracking transaction history, custom GSAP charts, and integrated multi-language support.',
     outcome: 'Delivered cleaner, more resilient transactions history displays and reduced component load times by ~15%.',
-    stack: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+    stack: ['React', 'TypeScript', 'Tailwind CSS', 'GSAP', 'Framer Motion'],
     screenshotUrl: catatCrypto,
     githubUrl: 'https://github.com/Akrmfdhl/catat-crypto',
     isPrivate: false
   },
   {
-    slug: 'lms-curriculum',
-    name: 'LMS Curriculum UI',
-    role: 'Contributor',
-    copyFraming: 'Contributor — feature branch, curriculum UI',
-    description: 'An advanced curriculum manager for learning management systems facilitating dynamic module drag-and-drop.',
-    problem: 'Curriculum layout tools were rigid, frustrating teachers when organizing complex course flows.',
-    approach: 'Owned the implementation of the drag-and-drop course-builder interface and course outline preview panels.',
-    outcome: 'Shipped modular layout interfaces supporting nesting levels up to four courses deep.',
-    stack: ['React', 'TypeScript', 'Tailwind CSS', 'Dnd Kit'],
-    screenshotUrl: lmsCurriculum,
-    githubUrl: 'https://github.com/Akrmfdhl/lms-curriculum-ui',
-    isPrivate: false
-  },
-  {
-    slug: 'blocksim',
-    name: 'BlockSim',
-    role: 'Contributor',
-    copyFraming: 'Contributor — Android app (Kotlin/Jetpack Compose + Go backend)',
-    description: 'A visual simulator for blockchain nodes demonstrating consensus algorithms under variable network latency.',
-    problem: 'Simulating consensus mechanisms visually in mobile environments was slow and difficult to debug.',
-    approach: 'Contributed Android frontend client logic in Kotlin and Jetpack Compose to display node logs in real time.',
-    outcome: 'Successfully visualized node transitions under latency ranges of 50ms to 2000ms.',
-    stack: ['Kotlin', 'Jetpack Compose', 'Go', 'gRPC'],
-    screenshotUrl: blocksim,
-    isPrivate: true
-  },
-  {
     slug: 'tiss',
     name: 'TISS',
     role: 'Core Contributor — ~65% of implementation',
-    copyFraming: 'Core Contributor — drove ~65% of implementation across the monorepo',
+    copyFraming: 'Core Contributor — Drove ~65% of implementation across the monorepo',
     description: 'An enterprise-scale tracking and information synchronization system deployed across distributed multi-tenant sites.',
     problem: 'Legacy systems suffered from data lag and lock conflicts during high-volume node replication cycles.',
     approach: 'Led the backend service refactor in Go, implemented Redis-backed event channels, and designed React dashboards.',

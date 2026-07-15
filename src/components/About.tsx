@@ -1,23 +1,18 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
-import ProfileCard from './ProfileCard';
 
 const skills = [
   'React',
   'TypeScript',
-  'Tailwind CSS',
-  'GSAP',
-  'Framer Motion',
-  'Lenis',
-  'React Router',
+  'Node.js',
   'Go',
-  'Gin',
-  'GORM',
+  'Python',
   'Postgres',
   'Redis',
   'Docker',
-  'Kotlin',
-  'Jetpack Compose'
+  'Tailwind CSS',
+  'Framer Motion',
+  'GSAP'
 ];
 
 function getSkillIcon(name: string) {
@@ -58,37 +53,10 @@ function getSkillIcon(name: string) {
           <path d="M12 24l-8-8h16l-8 8zm0-24l8 8H4l8-8zm-8 8h16v8H4V8z"/>
         </svg>
       );
-    case 'Lenis':
-      return (
-        <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 3v18M16 3v18M3 8h18M3 16h18"/>
-        </svg>
-      );
-    case 'React Router':
-      return (
-        <svg className="w-4 h-4 text-tech-router" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm0 0h10a2 2 0 002-2V9a2 2 0 00-2-2M9 17h6" />
-        </svg>
-      );
     case 'Go':
       return (
         <svg className="w-4 h-4 text-tech-go" viewBox="0 0 24 24" fill="currentColor">
           <path d="M14.28 2.3c-2.4 0-4.38 1.98-4.38 4.38v10.64c0 2.4 1.98 4.38 4.38 4.38s4.38-1.98 4.38-4.38V6.68c0-2.4-1.98-4.38-4.38-4.38zm-6.28 7h-2c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h2v-6z" />
-        </svg>
-      );
-    case 'Gin':
-      return (
-        <svg className="w-4 h-4 text-tech-gin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L2 22h20L12 2zM12 6l6 12H6L12 6z"/>
-        </svg>
-      );
-    case 'GORM':
-      return (
-        <svg className="w-4 h-4 text-tech-gorm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="9" rx="1"/>
-          <rect x="14" y="3" width="7" height="5" rx="1"/>
-          <rect x="14" y="12" width="7" height="9" rx="1"/>
-          <rect x="3" y="16" width="7" height="5" rx="1"/>
         </svg>
       );
     case 'Postgres':
@@ -109,18 +77,6 @@ function getSkillIcon(name: string) {
           <path d="M13.9 11.23h2.36v-2.36H13.9v2.36zm-2.82 0h2.36v-2.36H11.08v2.36zm-2.82 0h2.36v-2.36H8.26v2.36zm-2.82 0h2.36v-2.36H5.44v2.36z" />
         </svg>
       );
-    case 'Kotlin':
-      return (
-        <svg className="w-4 h-4 text-tech-kotlin" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M1.5 22.5h21v-21h-21v21zm2.5-2.5V4h16L4 20z" />
-        </svg>
-      );
-    case 'Jetpack Compose':
-      return (
-        <svg className="w-4 h-4 text-tech-kotlin" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 22h20L12 2zM4 19l8-13 8 13H4z"/>
-        </svg>
-      );
     default:
       return (
         <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -131,145 +87,82 @@ function getSkillIcon(name: string) {
   }
 }
 
-interface TiltCardProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-function TiltCard({ children, className = '' }: TiltCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const xc = rect.width / 2;
-    const yc = rect.height / 2;
-
-    const rotateX = -(y - yc) / 30;
-    const rotateY = (x - xc) / 40;
-
-    el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.015, 1.015, 1.015)`;
-  };
-
-  const handleMouseLeave = () => {
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-  };
-
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`transition-all duration-200 ease-out origin-center ${className}`}
-      style={{ transformStyle: 'preserve-3d' }}
-    >
-      {children}
-    </div>
-  );
-}
-
 export default function About() {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const aboutText = "Fullstack developer with hands-on experience across frontend, backend, and infrastructure. Core stack: React, TypeScript, Node.js, Go, and Python, with database work in PostgreSQL and MySQL. Currently Co-Founder & Fullstack Developer at Vora AI, building a multi-agent automation platform that unifies workflows for SMEs.";
+
+  const words = aboutText.split(' ');
+
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: {},
     visible: {
-      opacity: 1,
-      y: 0,
       transition: {
-        duration: 0.8,
-        ease: 'easeOut' as const,
-        staggerChildren: 0.05
+        staggerChildren: prefersReducedMotion ? 0 : 0.015
       }
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  const wordVariants = {
+    hidden: { opacity: prefersReducedMotion ? 1 : 0.15, y: prefersReducedMotion ? 0 : 4 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' as const } }
   };
 
   return (
     <section
       id="about"
-      className="bg-surface-tile-1 text-on-dark px-xl py-section flex items-center min-h-screen relative z-10 w-full"
+      className="bg-canvas text-on-dark px-xl py-section flex items-center min-h-screen relative z-10 w-full"
     >
       <div className="max-w-content-max mx-auto w-full flex flex-col gap-xl">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-md items-stretch w-full">
-          {/* Main Info Bento Box */}
-          <TiltCard className="md:col-span-8 flex">
-            <div className="bg-surface-tile-2/45 backdrop-blur-md border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between gap-lg h-full w-full">
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-100px' }}
-                variants={containerVariants}
-                className="flex flex-col gap-lg"
-              >
-                <motion.h2
-                  variants={itemVariants}
-                  className="text-display-lg text-body-on-dark"
-                >
-                  About
-                </motion.h2>
+          <div className="md:col-span-12 flex">
+            <div className="bg-surface-tile-2 border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between gap-lg h-full w-full">
+              <div className="flex flex-col gap-lg">
+                <h2 className="text-display-lg text-white font-extrabold font-apple-display">About</h2>
                 <motion.p
-                  variants={itemVariants}
-                  className="text-lead-airy text-body-muted leading-relaxed"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: '-100px' }}
+                  variants={containerVariants}
+                  className="text-lead-airy text-body-muted leading-relaxed font-apple-text"
                 >
-                  As a developer, I build premium web applications that prioritize visual excellence, structured aesthetics, and performance. I bridge the gap between architectural precision and fluid interface interaction.
+                  {words.map((word, i) => (
+                    <motion.span
+                      key={i}
+                      variants={wordVariants}
+                      className="inline-block mr-1.5"
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
                 </motion.p>
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-100px' }}
-                variants={containerVariants}
-                className="flex flex-col gap-md"
-              >
-                <motion.h3
-                  variants={itemVariants}
-                  className="text-caption-strong text-body-on-dark"
-                >
+              <div className="flex flex-col gap-md">
+                <h3 className="text-caption-strong text-white font-semibold font-apple-text">
                   Technologies & Frameworks
-                </motion.h3>
-                <motion.div
-                  variants={itemVariants}
-                  className="flex flex-wrap gap-xs"
-                >
+                </h3>
+                <div className="flex flex-wrap gap-xs">
                   {skills.map((skill) => (
                     <span
                       key={skill}
-                      className="flex items-center gap-xxs bg-surface-tile-1 text-body-muted text-caption border border-hairline/10 rounded-pill px-chip-x py-sm font-apple-text select-none hover:bg-primary/10 hover:border-primary/30 hover:text-body-on-dark transition-all duration-200 cursor-default"
+                      className="flex items-center gap-xxs bg-[#1B1035] text-body-muted text-caption border border-hairline/10 rounded-pill px-chip-x py-sm font-apple-text select-none hover:bg-primary/10 hover:border-primary/30 hover:text-white transition-all duration-200 cursor-default"
                     >
                       {getSkillIcon(skill)}
                       {skill}
                     </span>
                   ))}
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             </div>
-          </TiltCard>
+          </div>
 
-          {/* Profile Card Bento Box */}
-          <TiltCard className="md:col-span-4 flex">
-            <div className="bg-surface-tile-2/45 backdrop-blur-md border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex items-center justify-center h-full w-full">
-              <ProfileCard />
-            </div>
-          </TiltCard>
-
-          {/* Stat Bento Box 1 - Latency */}
-          <TiltCard className="md:col-span-4 flex">
-            <div className="bg-surface-tile-2/45 backdrop-blur-md border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col gap-sm justify-between w-full h-full group">
+          <div className="md:col-span-4 flex">
+            <div className="bg-surface-tile-2 border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col gap-sm justify-between w-full h-full group">
               <div className="flex flex-col gap-xs">
-                <span className="text-display-md font-semibold text-primary leading-none">&lt; 100ms</span>
-                <span className="text-caption-strong text-body-on-dark font-semibold mt-xs">Replication Latency</span>
-                <p className="text-caption text-body-muted leading-relaxed mt-xxs">
+                <span className="text-display-md font-extrabold text-primary leading-none">&lt; 100ms</span>
+                <span className="text-caption-strong text-white font-semibold mt-xs font-apple-text">Replication Latency</span>
+                <p className="text-caption text-body-muted leading-relaxed mt-xxs font-apple-text">
                   High-performance node replication channels deployed across distributed multi-tenant sites.
                 </p>
               </div>
@@ -277,9 +170,9 @@ export default function About() {
                 <svg className="w-full h-16 text-primary" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="latencyGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="rgba(0, 210, 255, 0.8)" />
-                      <stop offset="50%" stopColor="rgba(255, 159, 252, 0.8)" />
-                      <stop offset="100%" stopColor="rgba(0, 210, 255, 0.8)" />
+                      <stop offset="0%" stopColor="rgba(245, 158, 11, 0.8)" />
+                      <stop offset="50%" stopColor="rgba(245, 158, 11, 0.3)" />
+                      <stop offset="100%" stopColor="rgba(245, 158, 11, 0.8)" />
                     </linearGradient>
                   </defs>
                   <path d="M0,30 L40,30 L50,15 L60,45 L70,30 L80,30 L90,10 L100,50 L110,30 L120,30 L130,20 L140,40 L150,30 L200,30" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
@@ -289,15 +182,14 @@ export default function About() {
                 </svg>
               </div>
             </div>
-          </TiltCard>
+          </div>
 
-          {/* Stat Bento Box 2 - Uptime */}
-          <TiltCard className="md:col-span-4 flex">
-            <div className="bg-surface-tile-2/45 backdrop-blur-md border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col gap-sm justify-between w-full h-full group">
+          <div className="md:col-span-4 flex">
+            <div className="bg-surface-tile-2 border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col gap-sm justify-between w-full h-full group">
               <div className="flex flex-col gap-xs">
-                <span className="text-display-md font-semibold text-primary leading-none">99.9%</span>
-                <span className="text-caption-strong text-body-on-dark font-semibold mt-xs">Database Sync Uptime</span>
-                <p className="text-caption text-body-muted leading-relaxed mt-xxs">
+                <span className="text-display-md font-extrabold text-primary leading-none">99.9%</span>
+                <span className="text-caption-strong text-white font-semibold mt-xs font-apple-text">Database Sync Uptime</span>
+                <p className="text-caption text-body-muted leading-relaxed mt-xxs font-apple-text">
                   Dynamic read-replica routing and custom failover logs designed for large monorepo systems.
                 </p>
               </div>
@@ -306,8 +198,8 @@ export default function About() {
                   <svg className="w-full h-full text-primary" viewBox="0 0 100 100">
                     <defs>
                       <linearGradient id="uptimeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="rgb(0, 210, 255)" />
-                        <stop offset="100%" stopColor="rgb(255, 159, 252)" />
+                        <stop offset="0%" stopColor="rgb(245, 158, 11)" />
+                        <stop offset="100%" stopColor="rgba(245, 158, 11, 0.4)" />
                       </linearGradient>
                     </defs>
                     <circle cx="50" cy="50" r="38" stroke="rgba(255,255,255,0.05)" strokeWidth="6" fill="none" />
@@ -324,19 +216,18 @@ export default function About() {
                       className="origin-center animate-[spin_4s_linear_infinite]"
                     />
                   </svg>
-                  <div className="absolute text-caption font-semibold text-body-on-dark">99.9</div>
+                  <div className="absolute text-caption font-semibold text-white">99.9</div>
                 </div>
               </div>
             </div>
-          </TiltCard>
+          </div>
 
-          {/* Stat Bento Box 3 - Throughput */}
-          <TiltCard className="md:col-span-4 flex">
-            <div className="bg-surface-tile-2/45 backdrop-blur-md border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col gap-sm justify-between w-full h-full group">
+          <div className="md:col-span-4 flex">
+            <div className="bg-surface-tile-2 border border-hairline/10 hover:border-primary/50 rounded-lg p-lg shadow-product hover:shadow-primary/5 transition-all duration-300 flex flex-col gap-sm justify-between w-full h-full group">
               <div className="flex flex-col gap-xs">
-                <span className="text-display-md font-semibold text-primary leading-none">10k/sec</span>
-                <span className="text-caption-strong text-body-on-dark font-semibold mt-xs">Query Throughput</span>
-                <p className="text-caption text-body-muted leading-relaxed mt-xxs">
+                <span className="text-display-md font-extrabold text-primary leading-none">10k/sec</span>
+                <span className="text-caption-strong text-white font-semibold mt-xs font-apple-text">Query Throughput</span>
+                <p className="text-caption text-body-muted leading-relaxed mt-xxs font-apple-text">
                   Gin-based backend query routing combined with parallel write partitioning inside Postgres.
                 </p>
               </div>
@@ -346,19 +237,19 @@ export default function About() {
                   <line x1="10" y1="30" x2="190" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="3" strokeLinecap="round" />
                   <line x1="10" y1="45" x2="190" y2="45" stroke="rgba(255,255,255,0.05)" strokeWidth="3" strokeLinecap="round" />
 
-                  <circle cx="0" cy="15" r="2.5" fill="rgb(255, 159, 252)">
+                  <circle cx="0" cy="15" r="2.5" fill="rgb(245, 158, 11)">
                     <animate attributeName="cx" values="10;190" dur="1.8s" repeatCount="indefinite" />
                   </circle>
-                  <circle cx="0" cy="30" r="2.5" fill="rgb(0, 210, 255)">
+                  <circle cx="0" cy="30" r="2.5" fill="rgb(245, 158, 11)">
                     <animate attributeName="cx" values="10;190" dur="1.2s" repeatCount="indefinite" />
                   </circle>
-                  <circle cx="0" cy="45" r="2.5" fill="rgb(168, 85, 247)">
+                  <circle cx="0" cy="45" r="2.5" fill="rgb(245, 158, 11)">
                     <animate attributeName="cx" values="10;190" dur="2s" repeatCount="indefinite" />
                   </circle>
                 </svg>
               </div>
             </div>
-          </TiltCard>
+          </div>
         </div>
       </div>
     </section>

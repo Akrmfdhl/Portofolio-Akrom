@@ -11,7 +11,7 @@ interface LandingProps {
 
 export default function Landing({ onOpenResume }: LandingProps) {
   useEffect(() => {
-    document.title = 'Akrom Fadhil M. | Software Engineer';
+    document.title = 'Akrom Fadhil | Fullstack Developer';
   }, []);
 
   return (

@@ -1,11 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap');
 
 @import "tailwindcss";
 
+:root {
+  --global-bg: #0D0D0D;
+  --global-bg-gradient-top: #262626;
+}
+
 @theme {
-  --color-primary: #00D2FF;
-  --color-primary-focus: #33E0FF;
-  --color-primary-on-dark: #00D2FF;
+  --color-primary: #F59E0B;
+  --color-primary-focus: #FBBF24;
+  --color-primary-on-dark: #F59E0B;
   --color-ink: #F5F5F7;
   --color-body-on-dark: #ffffff;
   --color-body-muted: #a1a1a6;
@@ -13,13 +18,13 @@
   --color-ink-muted-48: #7a7a7f;
   --color-divider-soft: #25262b;
   --color-hairline: #202126;
-  --color-canvas: #0D0E11;
+  --color-canvas: var(--global-bg);
   --color-canvas-parchment: #14161b;
   --color-surface-pearl: #121317;
-  --color-surface-tile-1: #0F1013;
-  --color-surface-tile-2: #18191E;
-  --color-surface-tile-3: #131418;
-  --color-surface-black: #090A0C;
+  --color-surface-tile-1: var(--global-bg);
+  --color-surface-tile-2: #1A1A1A;
+  --color-surface-tile-3: #141414;
+  --color-surface-black: #080808;
   --color-surface-chip-translucent: rgba(255, 255, 255, 0.08);
   --color-on-primary: #000000;
   --color-on-dark: #ffffff;
@@ -80,12 +85,12 @@
   --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.4);
   --border-width-pearl: 3px;
 
-  --font-apple-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-apple-text: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-apple-display: 'Syne', sans-serif;
+  --font-apple-text: 'Manrope', sans-serif;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-apple-text);
   background-color: var(--color-canvas);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
