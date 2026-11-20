@@ -23,6 +23,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  css: {
+    devSourcemap: false,
+  },
   server: {
     allowedHosts: true,
   },
@@ -30,6 +33,7 @@ export default defineConfig({
     allowedHosts: true,
   },
   build: {
+    sourcemap: false,
     chunkSizeWarningLimit: 800,
   },
 })

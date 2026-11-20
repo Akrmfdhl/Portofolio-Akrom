@@ -4,14 +4,13 @@ import {
   EXPERIENCES,
   PROFILE,
   PROJECTS,
-  RAIL_GROUPS,
   SKILL_CLUSTERS,
   engineState,
-  getActiveVehicleLabel,
   getFirstStopIndexForRailGroup,
   notifyEngineUi,
   sanitizeTextInput,
 } from '../data/portfolioJourney';
+import { useI18n, pickText } from '../lib/i18n';
 import { playPulseSfx } from '../utils/soundEngine';
 
 interface TerminalModalProps {
@@ -26,74 +25,13 @@ interface LogEntry {
   text: string;
 }
 
-const HELP_TEXT = [
-  'help                     list available commands',
-  'akrom --info             engineer profile & contact endpoints',
-  'akrom --projects         deployed flagship systems & metrics',
-  'akrom --skills           full-stack, AI, Go & WebGL stack',
-  'cat journey.json         4-stage vehicle progression & telemetry',
-  'diag                     run static WebGL frame & shader diagnostics',
-  'goto <1-6>               jump to chapter (1=Earth Car .. 6=Space Dock)',
-  'boost                    trigger vehicle boost / afterburner',
-  'mode <director|orbit>    switch camera between multi-POV and free orbit',
-  'resume                   open Digital Resume modal',
-  'clear                    clear terminal output',
-  'exit                     close terminal window',
-].join('\n');
-
-function formatInfo(): string {
-  const current = EXPERIENCES.find((e) => e.isCurrent);
-  return [
-    `name      ${PROFILE.fullName}`,
-    `title     ${PROFILE.title}`,
-    current ? `current   ${current.role} @ ${current.company}` : '',
-    `location  ${PROFILE.location}`,
-    `email     ${PROFILE.email}`,
-    `github    ${PROFILE.github}`,
-    `linkedin  ${PROFILE.linkedin}`,
-  ]
-    .filter(Boolean)
-    .join('\n');
-}
-
-function formatProjects(): string {
-  return PROJECTS.map((p) => {
-    const tag = p.featured ? 'FLAGSHIP' : 'ARCHIVE ';
-    return `${tag}  ${p.title.padEnd(28)} ${p.status.padEnd(12)} ${p.metric}`;
-  }).join('\n');
-}
-
-function formatSkills(): string {
-  return SKILL_CLUSTERS.map(
-    (c) => `${c.title}\n  » ${c.skills.join(' · ')}`
-  ).join('\n\n');
-}
-
-function formatJourneyJson(): string {
-  return JSON.stringify(
-    {
-      activeVehicle: getActiveVehicleLabel(engineState.t),
-      cameraMode: engineState.cameraMode,
-      stages: [
-        'Stage 1: Earth Coastal Highway — Grand Touring Sports Car',
-        'Stage 2: Elevated Metro Viaduct — High-Speed Bullet Train',
-        'Stage 3: Stratosphere Ascent — Swept-Wing Jet Aircraft',
-        'Stage 4: Exosphere & Deep Space — Multi-Stage Orbital Rocket',
-      ],
-      chapters: RAIL_GROUPS.map((g, i) => `${i + 1}. ${g.label} (${g.host})`),
-      stats: PROFILE.stats,
-    },
-    null,
-    2
-  );
-}
-
 export default function TerminalModal({
   isOpen,
   onClose,
   onScrollToStop,
   onOpenResume,
 }: TerminalModalProps) {
+  const { locale, copy } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -103,9 +41,13 @@ export default function TerminalModal({
   const [logs, setLogs] = useState<LogEntry[]>([
     {
       kind: 'out',
-      text: 'AKROM TELEMETRY SHELL READY.\nType "help" for commands, "cat journey.json" for vehicle state, or "goto 1..6".',
+      text: copy.quickNav.welcome,
     },
   ]);
+
+  useEffect(() => {
+    setLogs([{ kind: 'out', text: copy.quickNav.welcome }]);
+  }, [copy.quickNav.welcome]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -128,6 +70,31 @@ export default function TerminalModal({
     setLogs((prev) => [...prev, entry]);
   };
 
+  const formatProfile = () => {
+    const current = EXPERIENCES.find((e) => e.isCurrent);
+    return [
+      `${PROFILE.fullName}`,
+      copy.hero.role,
+      current ? `${pickText(locale, current.role)} — ${current.company}` : '',
+      PROFILE.location,
+      PROFILE.email,
+      PROFILE.github,
+      PROFILE.linkedin,
+    ]
+      .filter(Boolean)
+      .join('\n');
+  };
+
+  const formatProjects = () =>
+    PROJECTS.map(
+      (p) => `${p.title.padEnd(28)} ${pickText(locale, p.metric)}`
+    ).join('\n');
+
+  const formatSkills = () =>
+    SKILL_CLUSTERS.map(
+      (c) => `${pickText(locale, c.title)}\n  · ${c.skills[locale].join(' · ')}`
+    ).join('\n\n');
+
   const executeCommand = (raw: string) => {
     const sanitized = sanitizeTextInput(raw, 120);
     const cmd = sanitized.replace(/\s+/g, ' ');
@@ -138,103 +105,79 @@ export default function TerminalModal({
     historyIdxRef.current = historyRef.current.length;
 
     const lower = cmd.toLowerCase();
-    if (lower === 'help') {
-      appendLog({ kind: 'out', text: HELP_TEXT });
+    if (lower === 'help' || lower === 'bantuan') {
+      appendLog({ kind: 'out', text: copy.quickNav.helpText });
       return;
     }
-    if (lower === 'akrom --info' || lower === 'whoami') {
-      appendLog({ kind: 'out', text: formatInfo() });
+    if (lower === 'profile' || lower === 'profil' || lower === 'akrom --info') {
+      appendLog({ kind: 'out', text: formatProfile() });
       return;
     }
-    if (lower === 'akrom --projects' || lower === 'ls projects') {
+    if (lower === 'projects' || lower === 'proyek' || lower === 'akrom --projects') {
       appendLog({ kind: 'out', text: formatProjects() });
       return;
     }
-    if (lower === 'akrom --skills' || lower === 'ls skills') {
+    if (lower === 'skills' || lower === 'keahlian' || lower === 'akrom --skills') {
       appendLog({ kind: 'out', text: formatSkills() });
       return;
     }
-    if (lower === 'cat journey.json' || lower === 'cat architecture.json') {
-      appendLog({ kind: 'out', text: formatJourneyJson() });
-      return;
-    }
-    if (lower === 'diag' || lower === 'ping' || lower === 'ping server') {
-      appendLog({
-        kind: 'out',
-        text: [
-          'STATIC WEBGL PIPELINE DIAGNOSTICS (ZERO-BACKEND MODE)',
-          `active_vehicle   ${getActiveVehicleLabel(engineState.t)}`,
-          `frame_rate       ${engineState.stats.fps} FPS`,
-          `draw_calls       ${engineState.stats.drawCalls} calls`,
-          `triangles        ${engineState.stats.triangles} tris`,
-          `spline_progress  ${engineState.t.toFixed(2)} / 12.00`,
-          'status           OK (100% Static Client Runtime)',
-        ].join('\n'),
-      });
-      return;
-    }
-    if (lower.startsWith('goto ')) {
+    if (lower.startsWith('goto ') || lower.startsWith('buka ')) {
       const num = Number.parseInt(lower.slice(5), 10);
-      if (num >= 1 && num <= RAIL_GROUPS.length) {
+      if (num >= 1 && num <= copy.chapters.length) {
         const stopIdx = getFirstStopIndexForRailGroup(num - 1);
         onScrollToStop(stopIdx);
         appendLog({
           kind: 'out',
-          text: `Navigating to Chapter ${num}: ${RAIL_GROUPS[num - 1].label}...`,
+          text: `${copy.quickNav.navigating} ${copy.chapters[num - 1].label}...`,
         });
         onClose();
       } else {
         appendLog({
           kind: 'err',
-          text: `Invalid chapter index. Use goto 1 through goto ${RAIL_GROUPS.length}.`,
+          text: `${copy.quickNav.invalidChapter} ${copy.chapters.length}.`,
         });
       }
       return;
     }
-    if (lower === 'boost' || lower === 'pulse') {
+    if (lower === 'boost' || lower === 'dorong') {
       engineState.pulse = 1.0;
       playPulseSfx(540);
-      appendLog({
-        kind: 'out',
-        text: `Vehicle propulsion boost engaged [${getActiveVehicleLabel(engineState.t)}].`,
-      });
+      appendLog({ kind: 'out', text: copy.quickNav.boostMsg });
       return;
     }
-    if (lower === 'mode orbit' || lower === 'orbit') {
+    if (lower === 'camera orbit' || lower === 'kamera bebas' || lower === 'orbit') {
       engineState.cameraMode = 'orbit';
       notifyEngineUi();
-      appendLog({
-        kind: 'out',
-        text: 'Camera switched to Free 3D Orbit mode.',
-      });
+      appendLog({ kind: 'out', text: copy.quickNav.orbitMsg });
       return;
     }
-    if (lower === 'mode director' || lower === 'mode rail' || lower === 'rail') {
+    if (
+      lower === 'camera guided' ||
+      lower === 'kamera pandu' ||
+      lower === 'mode rail'
+    ) {
       engineState.cameraMode = 'rail';
       notifyEngineUi();
-      appendLog({
-        kind: 'out',
-        text: 'Camera locked to Multi-Perspective Director spline.',
-      });
+      appendLog({ kind: 'out', text: copy.quickNav.guidedMsg });
       return;
     }
-    if (lower === 'resume') {
+    if (lower === 'cv' || lower === 'resume') {
       onClose();
       onOpenResume();
       return;
     }
-    if (lower === 'clear') {
+    if (lower === 'clear' || lower === 'bersihkan') {
       setLogs([]);
       return;
     }
-    if (lower === 'exit') {
+    if (lower === 'close' || lower === 'exit' || lower === 'keluar' || lower === 'tutup') {
       onClose();
       return;
     }
 
     appendLog({
       kind: 'err',
-      text: `${cmd.split(' ')[0]}: command not found. Type "help" to list commands.`,
+      text: `${cmd.split(' ')[0]}: ${copy.quickNav.unknownCmd}`,
     });
   };
 
@@ -263,7 +206,7 @@ export default function TerminalModal({
     <dialog
       ref={dialogRef}
       className="term"
-      aria-label="Interactive System Terminal"
+      aria-label={copy.quickNav.title}
       data-lenis-prevent
       onClose={onClose}
       onClick={(e) => {
@@ -271,28 +214,28 @@ export default function TerminalModal({
       }}
     >
       <div className="term__bar">
-        <span>{PROFILE.handle} — CLI</span>
+        <span>{copy.quickNav.title}</span>
         <div className="term__bar-actions">
           <button
             type="button"
             className="btn btn--small"
-            onClick={() => executeCommand('help')}
+            onClick={() => executeCommand(locale === 'id' ? 'bantuan' : 'help')}
           >
-            help
+            {copy.quickNav.btnHelp}
           </button>
           <button
             type="button"
             className="btn btn--small"
-            onClick={() => executeCommand('cat journey.json')}
+            onClick={() => executeCommand(locale === 'id' ? 'profil' : 'profile')}
           >
-            journey.json
+            {copy.quickNav.btnProfile}
           </button>
           <button
             type="button"
             className="btn btn--small"
             onClick={onClose}
           >
-            Close
+            {copy.quickNav.btnClose}
           </button>
         </div>
       </div>
@@ -306,13 +249,13 @@ export default function TerminalModal({
       >
         {logs.map((entry, idx) => (
           <pre key={idx} data-kind={entry.kind}>
-            {entry.kind === 'in' ? `$ ${entry.text}` : entry.text}
+            {entry.kind === 'in' ? `> ${entry.text}` : entry.text}
           </pre>
         ))}
       </div>
 
       <form className="term__form" onSubmit={handleSubmit}>
-        <label htmlFor="term-input">$</label>
+        <label htmlFor="term-input">&rsaquo;</label>
         <input
           id="term-input"
           ref={inputRef}
@@ -321,8 +264,8 @@ export default function TerminalModal({
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
-          placeholder="Type help, akrom --info, cat journey.json, diag, goto 1..6"
-          aria-label="Command input"
+          placeholder={copy.quickNav.placeholder}
+          aria-label={copy.quickNav.placeholder}
           onKeyDown={handleKeyDown}
         />
       </form>

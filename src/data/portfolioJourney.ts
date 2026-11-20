@@ -3,6 +3,7 @@ import lmsCurriculum from '../assets/lms-curriculum.png';
 import tiss from '../assets/tiss.png';
 import blocksim from '../assets/blocksim.png';
 import fotoCv from '../assets/FOTO CV.jpeg';
+import type { BootStageKey, LocalizedText } from '../lib/i18n';
 
 export function sanitizeExternalUrl(url?: string): string | undefined {
   if (!url) return undefined;
@@ -31,42 +32,42 @@ export function sanitizeTextInput(raw: string, maxLen = 120): string {
 
 export interface ExperienceItem {
   id: string;
-  role: string;
+  role: LocalizedText;
   company: string;
-  location: string;
-  period: string;
+  location: LocalizedText;
+  period: LocalizedText;
   isCurrent: boolean;
-  metricsBadge: string;
+  metricsBadge: LocalizedText;
   sectorCode: string;
-  description: string[];
+  description: { id: string[]; en: string[] };
   technologies: string[];
   liveUrl?: string;
 }
 
 export interface SkillCluster {
   id: string;
-  title: string;
+  title: LocalizedText;
   code: string;
-  skills: string[];
+  skills: { id: string[]; en: string[] };
 }
 
 export interface ProjectNodeItem {
   id: string;
   slug: string;
   title: string;
-  subtitle: string;
+  subtitle: LocalizedText;
   planetName: string;
-  role: string;
+  role: LocalizedText;
   category: 'ai' | 'distributed' | 'fintech' | 'web3' | 'mobile';
   featured: boolean;
   status: 'live' | 'production' | 'open-source';
-  summary: string;
-  problem: string;
-  approach: string;
-  outcome: string;
-  highlights: string[];
+  summary: LocalizedText;
+  problem: LocalizedText;
+  approach: LocalizedText;
+  outcome: LocalizedText;
+  highlights: { id: string[]; en: string[] };
   technologies: string[];
-  metric: string;
+  metric: LocalizedText;
   screenshotUrl: string;
   githubUrl?: string;
   liveUrl?: string;
@@ -78,7 +79,7 @@ export interface SpatialStop {
   label: string;
   sector: string;
   coordinates: string;
-  povLabel: string;
+  povLabel: LocalizedText;
   vehicleStage: 'car' | 'train' | 'aircraft' | 'rocket';
   cardSide: 'left' | 'right';
   index: number;
@@ -96,16 +97,16 @@ export interface RailGroup {
 }
 
 export const PALETTE_NUM = {
-  ground: 0x0b1628,
-  deep: 0x04070e,
-  surface: 0x161f30,
-  chalk: 0xe2e8f0,
-  dim: 0x94a3b8,
-  faint: 0x334155,
-  amber: 0xea580c,
-  link: 0x10b981,
-  cyan: 0x38bdf8,
-  red: 0xef4444,
+  ground: 0x000000,
+  deep: 0x000000,
+  surface: 0x121212,
+  chalk: 0xffffff,
+  dim: 0xa3a3a3,
+  faint: 0x525252,
+  amber: 0xffffff,
+  link: 0xe5e5e5,
+  cyan: 0xd4d4d4,
+  red: 0xa3a3a3,
 };
 
 export interface AtmosphereZone {
@@ -190,9 +191,9 @@ export const ATMOSPHERE_ZONES: AtmosphereZone[] = [
 ];
 
 export function getActiveVehicleLabel(t: number): string {
-  if (t < 1.65) return 'Grand Touring Car';
-  if (t < 5.5) return 'Mountain Express Train';
-  if (t < 8.5) return 'Stratosphere Jet Aircraft';
+  if (t < 1.2) return 'Grand Touring Car';
+  if (t < 5.15) return 'Mountain Express Train';
+  if (t < 8.15) return 'Stratosphere Jet Aircraft';
   return 'Orbital Rocket';
 }
 
@@ -200,7 +201,6 @@ export const PROFILE = {
   name: 'Akrom Fadhil',
   fullName: 'Akrom Fadhil M.',
   handle: 'Akrom Fadhil',
-  title: 'Fullstack, Multi-Agent AI & Distributed Systems Engineer',
   email: 'akromfadhil234@gmail.com',
   phone: '0858-9019-1405',
   whatsapp: 'https://wa.me/6285890191405',
@@ -208,84 +208,146 @@ export const PROFILE = {
   linkedin: 'https://linkedin.com/in/akrom',
   location: 'Rajeg, Kab. Tangerang, Banten 15540, Indonesia',
   avatarUrl: fotoCv,
-  bio: 'Software Engineer & Computer Science scholar architecting full-stack web applications, Python/FastAPI multi-agent AI platforms, high-throughput Go backends (< 100ms replication), and interactive React/TypeScript interfaces.',
-  aboutStory: [
-    'Co-Founder & Fullstack Architect at Vora AI — leading the React/TypeScript, Node.js/Express, and Python/FastAPI multi-agent ERP automation system (-40% ops delay).',
-    'Core Contributor (~65% Monorepo Ownership) at TISS Enterprise Platform — driving Go/Gin replication services, Redis pub/sub channels, and PostgreSQL partitioning at 10k/sec.',
-    'Frontend Systems Developer at PT Neo Era Cuan & Catat Crypto — shipping WCAG AAA-accessible financial telemetry and GSAP/Framer Motion visualization modules.',
-    'Computer Science Student at Universitas Sultan Ageng Tirtayasa (UNTIRTA, 2025–Present) & Software Engineering (RPL) Graduate from SMKN 5 Kab. Tangerang (2021–2024).',
-  ],
+  aboutStory: {
+    id: [
+      'Saya memimpin perancangan aplikasi web React, TypeScript, Node.js, dan Python FastAPI di Vora AI untuk mempercepat alur kerja operasional sebesar 40 persen.',
+      'Saya mengembangkan sekitar 65 persen basis kode platform TISS menggunakan bahasa Go, Redis, dan PostgreSQL hingga melayani 10.000 permintaan per detik.',
+      'Saya membangun antarmuka keuangan yang responsif dan memenuhi standar aksesibilitas WCAG AAA di PT Neo Era Cuan serta Catat Crypto.',
+      'Saya menempuh pendidikan Sarjana Ilmu Komputer di Universitas Sultan Ageng Tirtayasa setelah menamatkan jurusan Rekayasa Perangkat Lunak di SMKN 5 Kabupaten Tangerang.',
+    ],
+    en: [
+      'I lead React, TypeScript, Node.js, and Python FastAPI engineering at Vora AI, accelerating enterprise business operations by 40 percent.',
+      'I built approximately 65 percent of the TISS codebase with Go, Redis, and PostgreSQL, sustaining 10,000 updates per second under 100ms.',
+      'I delivered responsive financial web interfaces complying with WCAG AAA contrast standards at PT Neo Era Cuan and Catat Crypto.',
+      'I pursue a Computer Science degree at Universitas Sultan Ageng Tirtayasa following my Software Engineering diploma at SMKN 5 Kabupaten Tangerang.',
+    ],
+  },
   stats: [
-    { value: '< 100ms', label: 'Node Replication', detail: 'Go + Redis event sync' },
-    { value: '65%', label: 'Monorepo Ownership', detail: 'TISS full-stack codebase' },
-    { value: '10k/sec', label: 'Query Throughput', detail: 'Parallel Postgres writes' },
-    { value: '-40%', label: 'Workflow Latency', detail: 'Vora AI multi-agent ops' },
+    {
+      value: '< 100ms',
+      label: { id: 'Kecepatan Sinkronisasi', en: 'Real-Time Sync' },
+      detail: { id: 'Layanan Go dan Redis', en: 'Go and Redis services' },
+    },
+    {
+      value: '65%',
+      label: { id: 'Kontribusi Kode', en: 'Codebase Ownership' },
+      detail: { id: 'Pengembangan platform TISS', en: 'Full-stack TISS delivery' },
+    },
+    {
+      value: '10k/s',
+      label: { id: 'Kapasitas Transaksi', en: 'Processing Capacity' },
+      detail: { id: 'Pemrosesan paralel PostgreSQL', en: 'Parallel PostgreSQL writes' },
+    },
+    {
+      value: '-40%',
+      label: { id: 'Efisiensi Alur Kerja', en: 'Faster Operations' },
+      detail: { id: 'Otomasi bisnis Vora AI', en: 'Vora AI automation' },
+    },
   ],
 };
 
 export const EXPERIENCES: ExperienceItem[] = [
   {
     id: 'exp-vora',
-    role: 'Co-Founder & Fullstack Architect',
+    role: {
+      id: 'Co-Founder & Arsitek Full-Stack',
+      en: 'Co-Founder & Fullstack Architect',
+    },
     company: 'Vora AI',
-    location: 'Indonesia · Hybrid',
-    period: '2025 – Present',
+    location: { id: 'Indonesia · Hibrida', en: 'Indonesia · Hybrid' },
+    period: { id: '2025 – Sekarang', en: '2025 – Present' },
     isCurrent: true,
-    metricsBadge: '40% Faster Workflows',
-    sectorCode: 'MOUNTAIN PASS STATION 01',
-    description: [
-      'Architected a distributed multi-agent automation platform spanning a React/Vite/TypeScript dashboard, Node.js/Express API gateway, and Python/FastAPI agent runtime.',
-      'Unified siloed SME inventory, logistics, sales, finance, and compliance workflows into one PostgreSQL state machine.',
-      'Designed inter-agent validation guards cutting operational delays by 40%.',
-    ],
+    metricsBadge: { id: 'Operasional 40% Lebih Cepat', en: '40% Faster Workflows' },
+    sectorCode: 'Pengalaman 01',
+    description: {
+      id: [
+        'Saya merancang platform otomasi bisnis AI multi-agen yang menggabungkan dasbor React/TypeScript, gerbang API Node.js/Express, dan layanan agen Python/FastAPI.',
+        'Saya menyatukan alur kerja inventaris, logistik, penjualan, keuangan, dan kepatuhan UMKM ke dalam satu basis data PostgreSQL yang terintegrasi.',
+        'Saya menerapkan validasi antar-agen AI sehingga keterlambatan proses operasional berkurang sebesar 40 persen.',
+      ],
+      en: [
+        'I designed a multi-agent AI automation platform combining a React and TypeScript dashboard, Node.js API gateway, and Python FastAPI agent runtime.',
+        'I unified inventory, logistics, sales, finance, and compliance workflows into a single structured PostgreSQL database.',
+        'I built validation guards across collaborating AI agents, reducing operational delays by 40 percent.',
+      ],
+    },
     technologies: ['React', 'TypeScript', 'Node.js', 'Express', 'Python', 'FastAPI', 'PostgreSQL'],
   },
   {
     id: 'exp-tiss',
-    role: 'Core Monorepo Engineer (~65% Ownership)',
+    role: {
+      id: 'Pengembang Inti Platform (~65% Basis Kode)',
+      en: 'Core Monorepo Engineer (~65% Ownership)',
+    },
     company: 'TISS Enterprise Platform',
-    location: 'Indonesia · Distributed',
-    period: '2024 – 2025',
+    location: { id: 'Indonesia · Terdistribusi', en: 'Indonesia · Distributed' },
+    period: { id: '2024 – 2025', en: '2024 – 2025' },
     isCurrent: false,
-    metricsBadge: '< 100ms Replication',
-    sectorCode: 'VALLEY VIADUCT STATION 02',
-    description: [
-      'Drove ~65% of implementation across the monorepo for a multi-tenant tracking and synchronization system.',
-      'Led Go (Gin + GORM) backend refactors with Redis pub/sub event channels and lock reconciliation workers.',
-      'Scaled PostgreSQL write partitioning to 10k queries/sec under 100ms cross-node latency.',
-    ],
+    metricsBadge: { id: 'Sinkronisasi < 100ms', en: '< 100ms Synchronization' },
+    sectorCode: 'Pengalaman 02',
+    description: {
+      id: [
+        'Saya membangun sekitar 65 persen kode proyek untuk platform pelacakan dan sinkronisasi data multi-lokasi perusahaan.',
+        'Saya memperbarui layanan backend menggunakan Go (Gin dan GORM) serta saluran peristiwa Redis untuk mencegah konflik penguncian data.',
+        'Saya menyetel partisi penulisan PostgreSQL agar mampu memproses 10.000 permintaan per detik di bawah jeda 100 milidetik.',
+      ],
+      en: [
+        'I delivered roughly 65 percent of the multi-tenant codebase for an enterprise tracking and synchronization platform.',
+        'I refactored Go (Gin and GORM) backend services with Redis pub/sub event channels and lock reconciliation workers.',
+        'I scaled PostgreSQL write partitioning to sustain 10,000 queries per second below 100ms synchronization latency.',
+      ],
+    },
     technologies: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Redis', 'Docker', 'React', 'TypeScript'],
   },
   {
     id: 'exp-neo',
-    role: 'Frontend Systems Developer',
+    role: {
+      id: 'Pengembang Sistem Antarmuka',
+      en: 'Frontend Systems Developer',
+    },
     company: 'PT Neo Era Cuan & Catat Crypto',
-    location: 'Remote · Indonesia',
-    period: '2024 – 2025',
+    location: { id: 'Jarak Jauh · Indonesia', en: 'Remote · Indonesia' },
+    period: { id: '2024 – 2025', en: '2024 – 2025' },
     isCurrent: false,
-    metricsBadge: '+15% Faster Load',
-    sectorCode: 'ALPINE EXPRESS STATION 03',
-    description: [
-      'Engineered financial tracking, portfolio telemetry, and crypto trading journal interfaces in React, TypeScript, Tailwind CSS, and GSAP.',
-      'Built modular transaction history widgets, interactive charts, and EN/ID localization.',
-      'Delivered WCAG AAA contrast compliance while cutting component load times by 15%.',
-    ],
+    metricsBadge: { id: 'Pemuatan 15% Lebih Cepat', en: '+15% Faster Load' },
+    sectorCode: 'Pengalaman 03',
+    description: {
+      id: [
+        'Saya mengembangkan antarmuka pencatatan keuangan, pemantauan portofolio, dan jurnal perdagangan kripto menggunakan React, TypeScript, Tailwind CSS, dan GSAP.',
+        'Saya menyusun modul riwayat transaksi modular, grafik interaktif, serta dukungan dwibahasa Indonesia dan Inggris.',
+        'Saya memastikan seluruh antarmuka memenuhi standar kontras WCAG AAA sekaligus mempercepat waktu muat halaman sebesar 15 persen.',
+      ],
+      en: [
+        'I built financial tracking, portfolio analytics, and crypto trading journal interfaces in React, TypeScript, Tailwind CSS, and GSAP.',
+        'I crafted modular transaction widgets, interactive portfolio charts, and smooth Indonesian/English localization.',
+        'I achieved WCAG AAA contrast compliance while trimming initial component loading times by 15 percent.',
+      ],
+    },
     technologies: ['React', 'TypeScript', 'Tailwind CSS', 'GSAP', 'Framer Motion', 'FinTech UI'],
     liveUrl: 'https://github.com/Akrmfdhl/catat-crypto',
   },
   {
     id: 'exp-inovindo',
-    role: 'Front-End, ERD & Production Internships',
+    role: {
+      id: 'Magang Front-End, Basis Data & Produksi',
+      en: 'Front-End, Database & Operations Internships',
+    },
     company: 'PT. INOVINDO Multimedia & PT. Multi Nugraha Kencana',
-    location: 'Bandung & Tangerang, Indonesia',
-    period: '2022 – 2023',
+    location: { id: 'Bandung & Tangerang, Indonesia', en: 'Bandung & Tangerang, Indonesia' },
+    period: { id: '2022 – 2023', en: '2022 – 2023' },
     isCurrent: false,
-    metricsBadge: 'ERD · UI · Operations',
-    sectorCode: 'AIRFIELD TERMINAL STATION 04',
-    description: [
-      'PT. INOVINDO Multimedia (Aug–Nov 2022): Designed wireframes, UI layouts, digital web content, and relational ERD models for client web applications.',
-      'PT. Multi Nugraha Kencana (Jun–Sep 2023): Executed precision upholstery & assembly workflows on the production line with strict quality accuracy.',
-    ],
+    metricsBadge: { id: 'ERD · Antarmuka · Kualitas', en: 'ERD · UI · Quality' },
+    sectorCode: 'Pengalaman 04',
+    description: {
+      id: [
+        'Di PT. INOVINDO Multimedia (Ags–Nov 2022), saya merancang wireframe, tata letak web digital, serta pemodelan ERD basis data relasional untuk aplikasi klien.',
+        'Di PT. Multi Nugraha Kencana (Jun–Sep 2023), saya menjalankan proses perakitan pelapis interior dengan ketelitian tinggi dan disiplin kualitas.',
+      ],
+      en: [
+        'At PT. INOVINDO Multimedia (Aug–Nov 2022), I designed wireframes, web layouts, and relational database ERD models for client applications.',
+        'At PT. Multi Nugraha Kencana (Jun–Sep 2023), I executed precision upholstery and assembly workflows with strict quality discipline.',
+      ],
+    },
     technologies: ['HTML5', 'CSS3', 'JavaScript', 'ERD Modeling', 'Wireframing', 'Teamwork'],
   },
 ];
@@ -293,47 +355,79 @@ export const EXPERIENCES: ExperienceItem[] = [
 export const SKILL_CLUSTERS: SkillCluster[] = [
   {
     id: 'cluster-ai',
-    title: 'Multi-Agent AI & Data',
-    code: 'AI CORE',
-    skills: [
-      'Multi-Agent Orchestration',
-      'Python & FastAPI Microservices',
-      'PostgreSQL & ERD Modeling',
-      'Automated Workflow Pipelines',
-    ],
+    title: { id: 'AI Multi-Agen & Data', en: 'Multi-Agent AI & Data' },
+    code: 'AI',
+    skills: {
+      id: [
+        'Orkestrasi AI Multi-Agen',
+        'Layanan Mikro Python & FastAPI',
+        'Pemodelan PostgreSQL & ERD',
+        'Otomasi Alur Kerja Bisnis',
+      ],
+      en: [
+        'Multi-Agent Orchestration',
+        'Python & FastAPI Microservices',
+        'PostgreSQL & ERD Modeling',
+        'Automated Business Workflows',
+      ],
+    },
   },
   {
     id: 'cluster-backend',
-    title: 'Backend & Distributed Systems',
-    code: 'SYS MESH',
-    skills: [
-      'Go (Golang), Gin & GORM',
-      'Node.js & Express Gateways',
-      'Redis Pub/Sub & Event Bus',
-      'RESTful APIs & Partitioning',
-    ],
+    title: { id: 'Backend & Skalabilitas', en: 'Backend & Scalability' },
+    code: 'BE',
+    skills: {
+      id: [
+        'Go (Golang), Gin & GORM',
+        'Layanan API Node.js & Express',
+        'Redis Pub/Sub & Antrean Data',
+        'Arsitektur REST API & Partisi',
+      ],
+      en: [
+        'Go (Golang), Gin & GORM',
+        'Node.js & Express APIs',
+        'Redis Pub/Sub & Caching',
+        'REST API Design & Partitioning',
+      ],
+    },
   },
   {
     id: 'cluster-frontend',
-    title: 'Frontend & 3D WebGL',
-    code: 'FLIGHT UI',
-    skills: [
-      'React, TypeScript & Vite',
-      'Three.js, GLSL & WebGL',
-      'GSAP ScrollTrigger & Lenis',
-      'Tailwind CSS & WCAG AAA UI',
-    ],
+    title: { id: 'Antarmuka & Grafis 3D', en: 'Frontend & 3D Graphics' },
+    code: 'FE',
+    skills: {
+      id: [
+        'React, TypeScript & Vite',
+        'Three.js, GLSL & Grafis WebGL',
+        'Animasi GSAP ScrollTrigger & Lenis',
+        'Tailwind CSS & Aksesibilitas AAA',
+      ],
+      en: [
+        'React, TypeScript & Vite',
+        'Three.js, GLSL & WebGL',
+        'GSAP ScrollTrigger & Lenis',
+        'Tailwind CSS & WCAG AAA UI',
+      ],
+    },
   },
   {
     id: 'cluster-infra',
-    title: 'Tooling & Core Strengths',
-    code: 'OPS BAY',
-    skills: [
-      'Docker, Git & GitHub CI',
-      'Kotlin & Jetpack Compose',
-      'Problem Solving & Fast Learner',
-      'Time Management & Detail',
-    ],
+    title: { id: 'Perkakas & Soft Skill', en: 'Tooling & Core Strengths' },
+    code: 'OP',
+    skills: {
+      id: [
+        'Docker, Git & Alur GitHub',
+        'Kotlin & Jetpack Compose Android',
+        'Pemecahan Masalah & Adaptif',
+        'Manajemen Waktu & Ketelitian',
+      ],
+      en: [
+        'Docker, Git & GitHub CI',
+        'Kotlin & Jetpack Compose',
+        'Problem Solving & Fast Learner',
+        'Time Management & Precision',
+      ],
+    },
   },
 ];
 
@@ -342,104 +436,196 @@ export const PROJECTS: ProjectNodeItem[] = [
     id: 'proj-vora-ai',
     slug: 'vora-ai',
     title: 'Vora AI',
-    subtitle: 'Multi-Agent Enterprise Workflow & ERP Automation Platform',
-    planetName: 'STRATOSPHERE CORRIDOR · AI COMMAND',
-    role: 'Co-Founder & Lead Fullstack Architect',
+    subtitle: {
+      id: 'Platform Otomasi Alur Kerja & ERP Bisnis Berbasis Multi-Agen AI',
+      en: 'Multi-Agent Enterprise Workflow & ERP Automation Platform',
+    },
+    planetName: 'Karya 01 · Vora AI',
+    role: {
+      id: 'Co-Founder & Lead Fullstack Architect',
+      en: 'Co-Founder & Lead Fullstack Architect',
+    },
     category: 'ai',
     featured: true,
     status: 'production',
-    summary:
-      'Multi-agent platform unifying inventory, logistics, finance, sales, and compliance workflows for SMEs and e-commerce.',
-    problem:
-      'SMEs face operational silos where inventory, logistics, sales, and finance data live in disconnected tools.',
-    approach:
-      'Architected a 3-tier system: React/Vite/TS frontend, Node.js/Express gateway, and Python/FastAPI multi-agent orchestration backed by PostgreSQL.',
-    outcome:
-      'Delivered an autonomous operations dashboard that reduces cross-department operational delays by 40%.',
-    highlights: [
-      '5 domain AI agents coordinating over shared PostgreSQL state.',
-      'Real-time React + TypeScript control plane for approvals and monitoring.',
-    ],
+    summary: {
+      id: 'Platform AI multi-agen menyatukan pengelolaan inventaris, logistik, keuangan, penjualan, dan kepatuhan bagi UMKM serta e-commerce.',
+      en: 'Multi-agent platform unifying inventory, logistics, finance, sales, and compliance workflows for SMEs and e-commerce.',
+    },
+    problem: {
+      id: 'Banyak UMKM menggunakan aplikasi yang terpisah-pisah sehingga data stok, pengiriman, penjualan, dan keuangan sering tidak sinkron.',
+      en: 'SMEs often rely on disconnected tools where inventory, logistics, sales, and financial records fall out of sync.',
+    },
+    approach: {
+      id: 'Saya merancang arsitektur tiga lapis dengan frontend React/Vite/TS, gateway Node.js/Express, dan layanan multi-agen Python/FastAPI di atas PostgreSQL.',
+      en: 'I architected a three-tier platform with a React/Vite/TS frontend, Node.js/Express gateway, and Python/FastAPI multi-agent orchestration backed by PostgreSQL.',
+    },
+    outcome: {
+      id: 'Tim bisnis memperoleh dasbor kendali terpadu yang memangkas keterlambatan operasional lintas divisi sebesar 40 persen.',
+      en: 'Delivered a unified control dashboard that cut cross-department operational delays by 40 percent.',
+    },
+    highlights: {
+      id: [
+        'Lima agen AI spesialis berkolaborasi di atas status PostgreSQL terpadu.',
+        'Dasbor persetujuan dan pemantauan langsung dibangun dengan React dan TypeScript.',
+      ],
+      en: [
+        'Five domain AI agents coordinating reliably over shared PostgreSQL state.',
+        'Real-time React and TypeScript control workspace for approvals and monitoring.',
+      ],
+    },
     technologies: ['React', 'TypeScript', 'Node.js', 'Express', 'Python', 'FastAPI', 'PostgreSQL'],
-    metric: '-40% operational delay · 5 AI agents',
+    metric: {
+      id: 'Efisiensi 40% · 5 Agen AI',
+      en: '-40% operational delay · 5 AI agents',
+    },
     screenshotUrl: lmsCurriculum,
   },
   {
     id: 'proj-tiss',
     slug: 'tiss',
     title: 'TISS',
-    subtitle: 'Distributed Multi-Tenant Synchronization & Replication Engine',
-    planetName: 'MESOSPHERE CLIMB · SYNC RELAY',
-    role: 'Core Contributor (~65% Monorepo Ownership)',
+    subtitle: {
+      id: 'Platform Pelacakan & Sinkronisasi Data Multi-Lokasi Skala Perusahaan',
+      en: 'Multi-Tenant Enterprise Tracking & Synchronization Platform',
+    },
+    planetName: 'Karya 02 · TISS',
+    role: {
+      id: 'Kontributor Inti (~65% Basis Kode)',
+      en: 'Core Contributor (~65% Monorepo Ownership)',
+    },
     category: 'distributed',
     featured: true,
     status: 'production',
-    summary:
-      'Enterprise tracking and synchronization platform deployed across multi-tenant distributed sites with sub-100ms replication.',
-    problem:
-      'Legacy sync services suffered data lag and row-lock conflicts during high-volume replication cycles.',
-    approach:
-      'Refactored backend services in Go (Gin + GORM) with Redis pub/sub event channels, PostgreSQL partitioning, and React dashboards.',
-    outcome:
-      'Unified multi-tenant nodes under 100ms replication latency and 10k queries/sec throughput.',
-    highlights: [
-      'Go + Gin + GORM high-concurrency replication engine with lock reconciliation.',
-      'Owned ~65% of full-stack monorepo codebase across Go, Docker, and React.',
-    ],
+    summary: {
+      id: 'Platform pelacakan perusahaan yang menyinkronkan data antarcabang secara paralel dengan jeda kurang dari 100 milidetik.',
+      en: 'Enterprise tracking and synchronization platform operating across distributed locations under 100ms latency.',
+    },
+    problem: {
+      id: 'Layanan sinkronisasi lama kerap mengalami antrean lambat serta benturan kunci baris basis data saat lonjakan transaksi.',
+      en: 'Legacy sync services suffered data delays and database lock conflicts during high-volume traffic bursts.',
+    },
+    approach: {
+      id: 'Saya merombak layanan backend ke Go (Gin dan GORM) dengan antrean peristiwa Redis, partisi tabel PostgreSQL, serta dasbor React.',
+      en: 'I refactored backend services into Go (Gin and GORM) paired with Redis pub/sub channels, PostgreSQL partitioning, and React dashboards.',
+    },
+    outcome: {
+      id: 'Seluruh cabang perusahaan tetap tersinkron di bawah 100 milidetik pada beban puncak 10.000 kueri per detik.',
+      en: 'Kept all locations synchronized below 100ms latency at a sustained 10,000 queries per second.',
+    },
+    highlights: {
+      id: [
+        'Mesin replikasi Go + Gin + GORM menangani konkurensi tinggi dengan resolusi kunci otomatis.',
+        'Memegang pengembangan ~65% kode penuh lintas Go, Docker, PostgreSQL, dan React.',
+      ],
+      en: [
+        'Go + Gin + GORM high-concurrency replication with automated lock reconciliation.',
+        'Built ~65% of the full-stack codebase across Go, Docker, PostgreSQL, and React.',
+      ],
+    },
     technologies: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Redis', 'Docker', 'React', 'TypeScript'],
-    metric: '< 100ms sync · 10k queries/sec · 99.9% uptime',
+    metric: {
+      id: 'Jeda < 100ms · 10rb kueri/dtk',
+      en: '< 100ms sync · 10k queries/sec',
+    },
     screenshotUrl: tiss,
   },
   {
     id: 'proj-neo-era-cuan',
     slug: 'neo-era-cuan',
     title: 'PT Neo Era Cuan',
-    subtitle: 'High-Frequency Financial Telemetry & Investment Interface',
-    planetName: 'LUNAR ORBIT · TELEMETRY ARRAY',
-    role: 'Frontend Systems Developer',
+    subtitle: {
+      id: 'Antarmuka Pemantauan Keuangan & Investasi Berkecepatan Tinggi',
+      en: 'High-Responsiveness Financial Tracking & Investment Interface',
+    },
+    planetName: 'Karya 03 · PT Neo Era Cuan',
+    role: {
+      id: 'Frontend Systems Developer',
+      en: 'Frontend Systems Developer',
+    },
     category: 'fintech',
     featured: true,
     status: 'production',
-    summary:
-      'Production financial tracking and investment platform engineered for extreme responsiveness across mobile and desktop viewports.',
-    problem:
-      'Complex financial transaction logs were sluggish and difficult to navigate on compact mobile screens.',
-    approach:
-      'Built modular React/TypeScript layout engines with custom hooks and accessible UI tokens.',
-    outcome:
-      'Shipped a WCAG AAA-accessible web application with zero layout shift across all breakpoints.',
-    highlights: [
-      'Responsive multi-viewport financial tables and ledger pagination.',
-      'Strict design tokens meeting WCAG AAA contrast benchmarks.',
-    ],
+    summary: {
+      id: 'Aplikasi web pencatatan keuangan serta portofolio investasi yang dirancang mulus untuk perangkat seluler maupun desktop.',
+      en: 'Production financial tracking and investment platform engineered for extreme responsiveness on mobile and desktop.',
+    },
+    problem: {
+      id: 'Tabel catatan transaksi yang padat terasa berat dan sulit ditelusuri oleh pengguna di layar ponsel berukuran kecil.',
+      en: 'Dense financial transaction ledgers felt sluggish and difficult to read on compact mobile viewports.',
+    },
+    approach: {
+      id: 'Saya menyusun komponen React/TypeScript yang modular dengan manajemen state ringan serta token warna aksesibel.',
+      en: 'I engineered modular React/TypeScript layouts with custom state hooks and accessible typography/contrast tokens.',
+    },
+    outcome: {
+      id: 'Aplikasi mencapai standar aksesibilitas WCAG AAA dengan pergeseran tata letak nol di semua ukuran layar.',
+      en: 'Delivered a WCAG AAA-accessible web app with zero layout shift across all screen breakpoints.',
+    },
+    highlights: {
+      id: [
+        'Tabel keuangan dan paginasi buku besar adaptif di ponsel dan desktop.',
+        'Token desain ketat memenuhi rasio kontras aksesibilitas WCAG AAA.',
+      ],
+      en: [
+        'Responsive multi-viewport financial tables and ledger pagination.',
+        'Strict contrast tokens satisfying WCAG AAA accessibility benchmarks.',
+      ],
+    },
     technologies: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-    metric: 'AAA Accessibility · 60fps FinTech UI',
+    metric: {
+      id: 'Aksesibilitas AAA · UI 60fps',
+      en: 'AAA Accessibility · 60fps FinTech UI',
+    },
     screenshotUrl: tiss,
   },
   {
     id: 'proj-catat-crypto',
     slug: 'catat-crypto',
     title: 'Catat Crypto',
-    subtitle: 'Motion-Driven Crypto Trading Journal & Portfolio Analytics SPA',
-    planetName: 'SATURNIAN ORBIT · RING OBSERVATORY',
-    role: 'Frontend Contributor — GSAP & Motion Systems',
+    subtitle: {
+      id: 'Jurnal Perdagangan Aset Digital & Analitik Portofolio Interaktif',
+      en: 'Motion-Driven Crypto Trading Journal & Portfolio Analytics SPA',
+    },
+    planetName: 'Karya 04 · Catat Crypto',
+    role: {
+      id: 'Kontributor Antarmuka — GSAP & Motion',
+      en: 'Frontend Contributor — GSAP & Motion Systems',
+    },
     category: 'web3',
     featured: true,
     status: 'open-source',
-    summary:
-      'Interactive crypto trading journal SPA featuring GSAP portfolio charts, multi-wallet tracking, and EN/ID i18n.',
-    problem:
-      'Traders lacked a clean, unified journal for PnL and transaction history across CEX and DEX wallets.',
-    approach:
-      'Built modular transaction widgets, custom GSAP + Framer Motion charts, and localization toggles.',
-    outcome:
-      'Delivered resilient portfolio displays and reduced initial component load times by ~15%.',
-    highlights: [
-      'GSAP + Framer Motion telemetry charts for trade execution analysis.',
-      'Bundle optimization trimming component load times by ~15%.',
-    ],
+    summary: {
+      id: 'Aplikasi jurnal trading kripto dengan grafik portofolio GSAP, pelacakan banyak dompet, serta dukungan bahasa Indonesia dan Inggris.',
+      en: 'Interactive crypto trading journal featuring GSAP portfolio charts, multi-wallet tracking, and EN/ID localization.',
+    },
+    problem: {
+      id: 'Para trader kesulitan menyatukan riwayat untung-rugi dan catatan transaksi dari berbagai bursa maupun dompet.',
+      en: 'Traders lacked a unified journal to track profit-and-loss and transaction history across CEX and DEX wallets.',
+    },
+    approach: {
+      id: 'Saya membangun widget transaksi modular, visualisasi grafik GSAP serta Framer Motion, dan pengalih bahasa instan.',
+      en: 'I created modular transaction widgets, custom GSAP + Framer Motion charts, and instant localization controls.',
+    },
+    outcome: {
+      id: 'Tampilan portofolio berjalan stabil dan memangkas waktu pemuatan komponen awal sekitar 15 persen.',
+      en: 'Delivered resilient portfolio views while trimming initial component loading times by ~15 percent.',
+    },
+    highlights: {
+      id: [
+        'Grafik kinerja eksekusi transaksi dengan GSAP dan Framer Motion.',
+        'Optimasi kode menurunkan waktu pemuatan komponen hingga 15 persen.',
+      ],
+      en: [
+        'GSAP and Framer Motion telemetry charts for trade execution analysis.',
+        'Code optimization trimming initial load latency by ~15 percent.',
+      ],
+    },
     technologies: ['React', 'TypeScript', 'Tailwind CSS', 'GSAP', 'Framer Motion'],
-    metric: '-15% load time · Open Source',
+    metric: {
+      id: 'Muat -15% · Sumber Terbuka',
+      en: '-15% load time · Open Source',
+    },
     screenshotUrl: catatCrypto,
     githubUrl: 'https://github.com/Akrmfdhl/catat-crypto',
   },
@@ -447,80 +633,151 @@ export const PROJECTS: ProjectNodeItem[] = [
     id: 'proj-blocksim',
     slug: 'blocksim',
     title: 'BlockSim Android',
-    subtitle: 'Interactive Blockchain Cryptography & Consensus Simulator',
-    planetName: 'SATELLITE 01 · CRYPTOGRAPHY LAB',
-    role: 'Fullstack & Mobile Engineer',
+    subtitle: {
+      id: 'Aplikasi Simulasi Kriptografi & Konsensus Blockchain',
+      en: 'Interactive Blockchain Cryptography & Consensus Simulator',
+    },
+    planetName: 'Arsip 01 · BlockSim Android',
+    role: {
+      id: 'Pengembang Aplikasi Seluler & Backend',
+      en: 'Fullstack & Mobile Engineer',
+    },
     category: 'mobile',
     featured: false,
     status: 'production',
-    summary:
-      'Native Android micro-learning app with 7 interactive blockchain simulations, SHA-256 visualizers, and Go Fiber backend.',
-    problem: 'Learners struggle to visualize cryptographic hashing and Merkle trees without interactive tools.',
-    approach: 'Built a Kotlin Jetpack Compose app paired with a Go Fiber + PostgreSQL API.',
-    outcome: '7 hands-on blockchain simulation labs with completion tracking.',
-    highlights: ['Kotlin + Jetpack Compose native UI', 'Go Fiber + PostgreSQL backend'],
+    summary: {
+      id: 'Aplikasi Android dengan 7 simulasi interaktif kriptografi SHA-256 dan struktur Merkle bersama backend Go Fiber.',
+      en: 'Native Android learning app featuring 7 interactive blockchain simulations, SHA-256 visualizers, and a Go Fiber API.',
+    },
+    problem: {
+      id: 'Pelajar sering kesulitan membayangkan cara kerja hashing kriptografi dan pohon Merkle tanpa simulasi langsung.',
+      en: 'Learners struggle to visualize cryptographic hashing and Merkle trees without hands-on visual simulators.',
+    },
+    approach: {
+      id: 'Saya membangun aplikasi Kotlin Jetpack Compose yang terhubung dengan API Go Fiber dan PostgreSQL.',
+      en: 'I built a native Kotlin Jetpack Compose app paired with a Go Fiber and PostgreSQL backend.',
+    },
+    outcome: {
+      id: 'Menghasilkan 7 modul praktikum simulasi blockchain lengkap dengan pelacakan progres belajar.',
+      en: 'Launched 7 interactive blockchain simulation labs with seamless progress tracking.',
+    },
+    highlights: {
+      id: ['Antarmuka Android asli dengan Kotlin & Jetpack Compose', 'Layanan backend cepat memakai Go Fiber dan PostgreSQL'],
+      en: ['Native Android UI in Kotlin & Jetpack Compose', 'Fast Go Fiber & PostgreSQL backend'],
+    },
     technologies: ['Kotlin', 'Jetpack Compose', 'Go', 'Fiber', 'PostgreSQL'],
-    metric: '7 Interactive Labs',
+    metric: { id: '7 Lab Interaktif', en: '7 Interactive Labs' },
     screenshotUrl: blocksim,
   },
   {
     id: 'proj-lms-curriculum',
     slug: 'lms-curriculum',
     title: 'Modular LMS & Curriculum Engine',
-    subtitle: 'Academic Portal & Structured Learning Management System',
-    planetName: 'SATELLITE 02 · CURRICULUM GRAPH',
-    role: 'Fullstack Developer',
+    subtitle: {
+      id: 'Portal Akademik & Sistem Manajemen Pembelajaran Terstruktur',
+      en: 'Academic Portal & Structured Learning Management Platform',
+    },
+    planetName: 'Arsip 02 · Modular LMS',
+    role: { id: 'Pengembang Full-Stack', en: 'Fullstack Developer' },
     category: 'distributed',
     featured: false,
     status: 'production',
-    summary:
-      'End-to-end learning management system with structured curriculum graphs, RBAC, and progress tracking.',
-    problem: 'Traditional portals lack clear curriculum dependencies and live telemetry.',
-    approach: 'Built a React + TypeScript frontend backed by relational database schemas.',
-    outcome: 'Streamlined course delivery and student analytics in one unified UI.',
-    highlights: ['Role-based curriculum graph', 'Real-time student progress'],
+    summary: {
+      id: 'Platform pembelajaran menyeluruh dengan peta kurikulum terstruktur, pengaturan hak akses peran, dan pantauan kemajuan siswa.',
+      en: 'End-to-end learning portal featuring structured curriculum graphs, role permissions, and student progress tracking.',
+    },
+    problem: {
+      id: 'Portal akademik konvensional sering tidak memperlihatkan keterkaitan prasyarat mata pelajaran secara jelas.',
+      en: 'Traditional learning portals lack clear curriculum dependency paths and unified analytics.',
+    },
+    approach: {
+      id: 'Saya merancang antarmuka React + TypeScript bersama skema basis data relasional yang rapi.',
+      en: 'I built a React and TypeScript frontend backed by clean relational database schemas.',
+    },
+    outcome: {
+      id: 'Memudahkan pengajar dan siswa memantau perkembangan materi dalam satu aplikasi terpadu.',
+      en: 'Streamlined course delivery and student tracking inside one unified workspace.',
+    },
+    highlights: {
+      id: ['Peta kurikulum berbasis peran pengguna', 'Pembaruan capaian belajar secara langsung'],
+      en: ['Role-based curriculum graph', 'Real-time student progress views'],
+    },
     technologies: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
-    metric: 'Unified Academic Graph',
+    metric: { id: 'Kurikulum Terpadu', en: 'Unified Academic Graph' },
     screenshotUrl: lmsCurriculum,
   },
   {
     id: 'proj-webgl-grid',
     slug: 'webgl-grid',
-    title: 'Multi-Vehicle 3D WebGL Engine',
-    subtitle: 'Procedural Car, Train, Aircraft, Rocket & Mountain Valley Pipeline',
-    planetName: 'SATELLITE 03 · WEBGL ENGINE',
-    role: 'Graphics & Frontend Engineer',
+    title: 'Portofolio Interaktif 3D Web',
+    subtitle: {
+      id: 'Visualisasi Perjalanan Kendaraan & Lanskap Pegunungan ke Luar Angkasa',
+      en: 'Interactive Car, Train, Aircraft, Rocket & Mountain-to-Space Experience',
+    },
+    planetName: 'Arsip 03 · Web 3D Portfolio',
+    role: { id: 'Pengembang Grafis & Antarmuka Web', en: 'Graphics & Frontend Engineer' },
     category: 'ai',
     featured: false,
     status: 'live',
-    summary:
-      'Custom Three.js r186 + GLSL storytelling engine with alpine FBM terrain, multi-angle camera director, and WebAudio soundscape.',
-    problem: 'Static 2D pages rarely communicate interactive 3D engineering craft.',
-    approach: 'Built every vehicle, mountain terrain mesh, and sky shader procedurally with zero external GLBs.',
-    outcome: 'Smooth 60fps responsive experience across mobile and desktop screens.',
-    highlights: ['Procedural FBM mountains', '4 custom 3D vehicles'],
-    technologies: ['Three.js', 'GLSL Shaders', 'GSAP ScrollTrigger', 'Lenis', 'WebAudio API'],
-    metric: '60fps WebGL · Zero External Models',
+    summary: {
+      id: 'Pengalaman portofolio interaktif berbasis Three.js dan GSAP dengan perjalanan terhubung dari pegunungan, stasiun, bandara, landasan roket, hingga observatorium ruang angkasa dalam.',
+      en: 'Interactive portfolio experience crafted with Three.js and GSAP featuring a connected journey across alpine roads, train stations, an airport, a spaceport, and deep space.',
+    },
+    problem: {
+      id: 'Halaman portofolio statis dua dimensi kurang menggambarkan kualitas karya rekayasa perangkat lunak secara langsung.',
+      en: 'Static two-dimensional resumes rarely showcase interactive web and graphics engineering craft.',
+    },
+    approach: {
+      id: 'Saya memadukan model Porsche 959, kereta ekspres, pesawat jet, roket, dan planet dalam satu alur gulir yang halus.',
+      en: 'I orchestrated a seamless scroll journey combining vehicles, alpine scenery, and celestial bodies in Three.js.',
+    },
+    outcome: {
+      id: 'Pengunjung dapat membaca profil, pengalaman kerja, dan studi kasus sambil menikmati adegan tiga dimensi responsif.',
+      en: 'Visitors explore career milestones and case studies seamlessly alongside a responsive 3D canvas.',
+    },
+    highlights: {
+      id: ['Lanskap pegunungan dan atmosfer bertekstur tinggi', 'Navigasi dwibahasa dengan animasi halus'],
+      en: ['High-detail mountain valley and planetary visuals', 'Responsive multi-breakpoint typography & cards'],
+    },
+    technologies: ['Three.js', 'GLSL', 'GSAP ScrollTrigger', 'Lenis', 'React'],
+    metric: { id: 'Pengalaman Web 3D', en: 'Interactive 3D Web' },
     screenshotUrl: tiss,
   },
   {
     id: 'proj-redis-mesh',
     slug: 'redis-mesh',
-    title: 'High-Throughput Query Router',
-    subtitle: 'Parallel PostgreSQL Partitioning & Read-Replica Failover',
-    planetName: 'SATELLITE 04 · TELEMETRY ROUTER',
-    role: 'Backend Systems Architect',
+    title: 'Pemroses Kueri Berkapasitas Tinggi',
+    subtitle: {
+      id: 'Arsitektur Partisi PostgreSQL & Antrean Peristiwa Redis',
+      en: 'Parallel PostgreSQL Partitioning & Read-Replica Coordination',
+    },
+    planetName: 'Arsip 04 · Query Processor',
+    role: { id: 'Pengembang Backend', en: 'Backend Engineer' },
     category: 'distributed',
     featured: false,
     status: 'production',
-    summary:
-      'Dynamic query partition router in Go/Gin with automated read-replica failover and Redis lock reconciliation.',
-    problem: 'Write contention under 10k/sec burst loads caused latency spikes.',
-    approach: 'Partitioned write streams and decoupled notifications via Redis event channels.',
-    outcome: 'Sustained 10k/sec throughput at 99.9% uptime.',
-    highlights: ['10k/sec query routing', 'Automated replica failover'],
+    summary: {
+      id: 'Pengatur lalu lintas penulisan basis data dalam bahasa Go dan Gin yang menjaga kestabilan respons pada trafik tinggi.',
+      en: 'Dynamic PostgreSQL partitioning and Go/Gin query coordinator ensuring low-latency responses under burst load.',
+    },
+    problem: {
+      id: 'Lonjakan 10.000 permintaan per detik menyebabkan antrean penulisan menumpuk di satu tabel utama.',
+      en: 'Burst traffic of 10,000 requests per second caused heavy write contention on monolithic database tables.',
+    },
+    approach: {
+      id: 'Saya memecah jalur penulisan per partisi dan menyalurkan pembaruan status lewat Redis.',
+      en: 'I partitioned write streams cleanly and decoupled change notifications via Redis.',
+    },
+    outcome: {
+      id: 'Kapasitas pemrosesan bertahan di angka 10.000 permintaan per detik dengan ketersediaan 99,9 persen.',
+      en: 'Sustained 10,000 requests per second at 99.9 percent reliability.',
+    },
+    highlights: {
+      id: ['Distribusi penulisan 10rb/detik tanpa hambatan', 'Pemulihan baca replika secara otomatis'],
+      en: ['10k/sec write distribution', 'Automated read-replica recovery'],
+    },
     technologies: ['Go', 'Gin', 'PostgreSQL', 'Redis', 'Docker'],
-    metric: '10k/sec · 99.9% Uptime',
+    metric: { id: '10rb/dtk · Andal 99,9%', en: '10k/sec · 99.9% Reliable' },
     screenshotUrl: catatCrypto,
   },
 ];
@@ -531,70 +788,120 @@ export const ARCHIVE_PROJECTS = PROJECTS.filter((p) => !p.featured);
 export const EDUCATION = [
   {
     institution: 'Universitas Sultan Ageng Tirtayasa (UNTIRTA)',
-    degree: 'S1 Ilmu Komputer (Computer Science)',
-    period: '2025 – Present',
+    degree: {
+      id: 'S1 Ilmu Komputer (Informatika)',
+      en: 'B.Sc. in Computer Science',
+    },
+    period: { id: '2025 – Sekarang', en: '2025 – Present' },
     location: 'Banten, Indonesia',
-    highlight: 'Focus: Distributed Systems, Algorithms & Artificial Intelligence',
+    highlight: {
+      id: 'Fokus: Sistem Terdistribusi, Algoritma & Kecerdasan Buatan',
+      en: 'Focus: Distributed Systems, Algorithms & Artificial Intelligence',
+    },
   },
   {
     institution: 'SMKN 5 Kabupaten Tangerang',
-    degree: 'Rekayasa Perangkat Lunak (RPL / Software Engineering)',
-    period: '2021 – 2024',
+    degree: {
+      id: 'Rekayasa Perangkat Lunak (RPL)',
+      en: 'Software Engineering Vocational Diploma',
+    },
+    period: { id: '2021 – 2024', en: '2021 – 2024' },
     location: 'Tangerang, Indonesia',
-    highlight: 'Focus: Fullstack Web Development, ERD & Relational Databases',
+    highlight: {
+      id: 'Fokus: Pengembangan Web Full-Stack, ERD & Basis Data Relasional',
+      en: 'Focus: Full-Stack Web Development, ERD & Relational Databases',
+    },
   },
   {
     institution: 'MTsN 1 Tangerang',
-    degree: 'Sekolah Menengah Pertama',
-    period: '2018 – 2021',
+    degree: {
+      id: 'Sekolah Menengah Pertama',
+      en: 'Junior High School',
+    },
+    period: { id: '2018 – 2021', en: '2018 – 2021' },
     location: 'Tangerang, Indonesia',
-    highlight: 'General Secondary Education',
+    highlight: {
+      id: 'Pendidikan Menengah Umum',
+      en: 'General Secondary Education',
+    },
   },
 ];
 
 export const CERTIFICATIONS = [
   {
-    title: 'Co-Founder & Lead Fullstack Architect',
+    title: {
+      id: 'Co-Founder & Lead Fullstack Architect',
+      en: 'Co-Founder & Lead Fullstack Architect',
+    },
     issuer: 'Vora AI Multi-Agent Platform',
-    badge: '2025 – Present',
+    badge: { id: '2025 – Sekarang', en: '2025 – Present' },
   },
   {
-    title: 'Core Monorepo Ownership (~65%)',
-    issuer: 'TISS Distributed Synchronization Engine',
-    badge: '2024 – 2025',
+    title: {
+      id: 'Kontributor Utama Basis Kode (~65%)',
+      en: 'Core Monorepo Ownership (~65%)',
+    },
+    issuer: 'TISS Enterprise Platform',
+    badge: { id: '2024 – 2025', en: '2024 – 2025' },
   },
   {
-    title: 'Front-End & Database ERD Internship',
+    title: {
+      id: 'Magang Front-End & Pemodelan Basis Data ERD',
+      en: 'Front-End & Database ERD Internship',
+    },
     issuer: 'PT. INOVINDO Multimedia',
-    badge: 'Aug – Nov 2022',
+    badge: { id: 'Ags – Nov 2022', en: 'Aug – Nov 2022' },
   },
   {
-    title: 'Production Assembly & QA Discipline',
+    title: {
+      id: 'Pengalaman Perakitan & Kedisiplinan Kualitas',
+      en: 'Production Assembly & QA Discipline',
+    },
     issuer: 'PT. Multi Nugraha Kencana',
-    badge: 'Jun – Sep 2023',
+    badge: { id: 'Jun – Sep 2023', en: 'Jun – Sep 2023' },
   },
 ];
 
 export const FAQS = [
   {
-    question: 'What technology stacks do you specialize in?',
-    answer:
-      'I build end-to-end systems with React, TypeScript, Tailwind CSS, Three.js, and GSAP on the frontend, paired with Go (Gin/GORM), Node.js/Express, and Python/FastAPI backends over PostgreSQL and Redis.',
+    question: {
+      id: 'Teknologi apa saja yang Anda kuasai?',
+      en: 'What technology stacks do you specialize in?',
+    },
+    answer: {
+      id: 'Saya membangun aplikasi dari awal hingga siap pakai menggunakan React, TypeScript, Tailwind CSS, Three.js, dan GSAP di sisi frontend, serta Go (Gin/GORM), Node.js/Express, dan Python/FastAPI di sisi backend bersama PostgreSQL serta Redis.',
+      en: 'I build complete applications with React, TypeScript, Tailwind CSS, Three.js, and GSAP on the frontend, paired with Go (Gin/GORM), Node.js/Express, and Python/FastAPI backends over PostgreSQL and Redis.',
+    },
   },
   {
-    question: 'How is the Earth-to-Space 3D scene constructed?',
-    answer:
-      'All mountains, alpine valleys, rivers, roads, railway viaducts, 4 vehicles (Sports Car, Bullet Train, Jet Aircraft, Orbital Rocket), and planets are procedurally synthesized in Three.js r186 with FBM textures and custom atmospheric shaders.',
+    question: {
+      id: 'Bagaimana tampilan 3D di halaman portofolio ini bekerja?',
+      en: 'How is this interactive 3D portfolio constructed?',
+    },
+    answer: {
+      id: 'Seluruh adegan di halaman ini berjalan langsung di peramban menggunakan Three.js dan animasi gulir GSAP tanpa server backend, mulai dari Porsche 959 di jalur berliku, stasiun kereta 3D, bandara, landasan peluncuran roket, hingga observatorium luar angkasa.',
+      en: 'The entire visual journey runs directly inside your browser using Three.js and GSAP ScrollTrigger without any external backend server, traversing winding alpine highways, a 3D train station, an airport, a highland spaceport, and deep space.',
+    },
   },
   {
-    question: 'What were your key engineering contributions at Vora AI and TISS?',
-    answer:
-      'At Vora AI I designed the React/Node/FastAPI multi-agent architecture reducing workflow delays by 40%. On TISS I drove ~65% of monorepo development in Go, Postgres, and Redis, scaling to 10k queries/sec under 100ms latency.',
+    question: {
+      id: 'Apa pencapaian utama Anda di Vora AI dan TISS?',
+      en: 'What were your key engineering contributions at Vora AI and TISS?',
+    },
+    answer: {
+      id: 'Di Vora AI saya merancang platform AI multi-agen yang mempercepat alur kerja sebesar 40 persen. Di TISS saya mengembangkan sekitar 65 persen kode proyek di Go, Redis, dan PostgreSQL hingga melayani 10.000 kueri per detik di bawah 100ms.',
+      en: 'At Vora AI I designed a multi-agent workflow platform cutting operational delays by 40 percent. At TISS I wrote ~65 percent of the codebase in Go, Postgres, and Redis supporting 10k queries/sec under 100ms latency.',
+    },
   },
   {
-    question: 'Are you open to software engineering roles or project collaborations?',
-    answer:
-      'Yes! I am available for full-time software engineering, frontend/fullstack, or AI system architecture roles in Tangerang/Jakarta or remote. Use the contact form or open my Curriculum Vitae directly on this page.',
+    question: {
+      id: 'Apakah Anda terbuka untuk pekerjaan penuh waktu atau kolaborasi proyek?',
+      en: 'Are you open to software engineering roles or collaborations?',
+    },
+    answer: {
+      id: 'Ya, saya siap bergabung untuk peran Full-Stack Engineer, Frontend Engineer, atau AI Software Engineer baik di area Jabodetabek maupun kerja jarak jauh. Anda dapat menghubungi saya melalui formulir atau membuka CV langsung di halaman ini.',
+      en: 'Yes, I am open to Full-Stack, Frontend, and AI Software Engineering opportunities across Tangerang/Jakarta or remote. Feel free to send a message below or open my CV directly on this page.',
+    },
   },
 ];
 
@@ -602,184 +909,184 @@ const rawStops: Omit<SpatialStop, 'index'>[] = [
   {
     id: 'edge',
     kind: 'edge',
-    label: 'Mountain Pass Highway · Sports Car',
-    sector: 'STAGE 01 · ALPINE HIGHWAY PASS',
-    coordinates: 'GROUND LEVEL · ELEV 850M',
-    povLabel: 'Left Highway Chase POV',
+    label: 'Bagian 01 · Profil',
+    sector: 'Bagian 01',
+    coordinates: '',
+    povLabel: { id: 'Jalur Pegunungan Berliku', en: 'Winding Alpine Highway' },
     vehicleStage: 'car',
     cardSide: 'left',
-    anchor: [4.0, 0.0, -2],
-    cam: [-2.7, 1.35, 10.6],
-    look: [0.4, 0.72, -1],
-    packet: [0.0, 0.225, 4.2],
+    anchor: [1.6, 0.0, -3.5],
+    cam: [-4.2, 1.55, 10.6],
+    look: [0.6, 0.72, -1.8],
+    packet: [-0.8, 0.2, 4.0],
   },
   {
     id: 'proxy',
     kind: 'proxy',
-    label: 'Curriculum Vitae & Tunnel Interchange',
-    sector: 'STAGE 01 · MOUNTAIN TUNNEL OVERPASS',
-    coordinates: 'MILE 14 · ELEV 1,120M',
-    povLabel: 'Right Valley Pan POV',
+    label: 'Bagian 01 · Ringkasan',
+    sector: 'Bagian 01',
+    coordinates: '',
+    povLabel: { id: 'Stasiun Utama Pegunungan', en: 'Grand Mountain Station' },
     vehicleStage: 'car',
     cardSide: 'right',
-    anchor: [-4.0, 0.0, -35],
-    cam: [3.2, 1.65, -24.5],
-    look: [-0.45, 0.78, -35],
-    packet: [0.0, 0.225, -30.0],
+    anchor: [0.4, 0.0, -53.8],
+    cam: [2.6, 3.15, -36.8],
+    look: [-0.4, 1.15, -51.5],
+    packet: [-2.2, 0.2, -48.5],
   },
   {
     id: 'exp-vora',
     kind: 'rack',
-    label: `${EXPERIENCES[0].role} @ ${EXPERIENCES[0].company}`,
-    sector: 'STAGE 02 · MOUNTAIN GORGE VIADUCT',
-    coordinates: 'STATION 01 · SHINKANSEN EXPRESS',
-    povLabel: 'Left Viaduct Profile POV',
+    label: 'Bagian 02 · Vora AI',
+    sector: 'Bagian 02',
+    coordinates: '',
+    povLabel: { id: 'Jembatan Layang Berliku', en: 'Curved Mountain Viaduct' },
     vehicleStage: 'train',
     cardSide: 'left',
-    anchor: [4.2, 2.15, -60],
-    cam: [-3.6, 3.25, -51.5],
-    look: [0.45, 2.38, -60],
-    packet: [0.0, 2.4, -57.2],
+    anchor: [7.0, 1.15, -70.5],
+    cam: [0.6, 2.55, -60.2],
+    look: [5.0, 1.2, -70.8],
+    packet: [4.5, 0.9, -68.5],
   },
   {
     id: 'exp-tiss',
     kind: 'rack',
-    label: `${EXPERIENCES[1].role} @ ${EXPERIENCES[1].company}`,
-    sector: 'STAGE 02 · RIVER CANYON BRIDGE',
-    coordinates: 'STATION 02 · SHINKANSEN EXPRESS',
-    povLabel: 'Top-Down Valley River POV',
+    label: 'Bagian 02 · TISS',
+    sector: 'Bagian 02',
+    coordinates: '',
+    povLabel: { id: 'Jembatan Sungai Ngarai', en: 'Canyon River Viaduct' },
     vehicleStage: 'train',
     cardSide: 'right',
-    anchor: [-4.2, 2.15, -74],
-    cam: [2.8, 7.6, -65.5],
-    look: [-0.35, 2.38, -74],
-    packet: [0.0, 2.4, -71.2],
+    anchor: [-3.4, 1.85, -88.0],
+    cam: [3.8, 4.45, -78.8],
+    look: [-1.4, 1.9, -88.0],
+    packet: [-1.0, 1.84, -87.4],
   },
   {
     id: 'exp-neo',
     kind: 'rack',
-    label: `${EXPERIENCES[2].role} @ ${EXPERIENCES[2].company}`,
-    sector: 'STAGE 02 · ALPINE TRESTLE BRIDGE',
-    coordinates: 'STATION 03 · SHINKANSEN EXPRESS',
-    povLabel: 'Low Under-Viaduct Arch POV',
+    label: 'Bagian 02 · Neo Era Cuan',
+    sector: 'Bagian 02',
+    coordinates: '',
+    povLabel: { id: 'Tikungan Stasiun Lembah', en: 'Valley Station Curve' },
     vehicleStage: 'train',
     cardSide: 'left',
-    anchor: [4.2, 2.15, -88],
-    cam: [-2.8, 1.25, -80.0],
-    look: [0.45, 2.4, -88],
-    packet: [0.0, 2.4, -85.2],
+    anchor: [-3.8, 1.5, -106.5],
+    cam: [-9.8, 3.35, -97.8],
+    look: [-5.4, 1.55, -107.2],
+    packet: [-5.6, 1.5, -107.0],
   },
   {
     id: 'exp-inovindo',
     kind: 'rack',
-    label: `${EXPERIENCES[3].role} @ ${EXPERIENCES[3].company}`,
-    sector: 'STAGE 02 · ALPINE AIRFIELD TERMINAL',
-    coordinates: 'STATION 04 · RUNWAY INTERCHANGE',
-    povLabel: 'Right Airfield Approach POV',
+    label: 'Bagian 02 · Pengalaman Awal',
+    sector: 'Bagian 02',
+    coordinates: '',
+    povLabel: { id: 'Terminal Bandara & Landasan', en: 'Airport Terminal & Runway' },
     vehicleStage: 'train',
     cardSide: 'right',
-    anchor: [-4.2, 2.15, -102],
-    cam: [3.6, 3.85, -94.0],
-    look: [-0.4, 2.65, -102],
-    packet: [0.0, 2.6, -99.2],
+    anchor: [-5.6, 0.2, -139.0],
+    cam: [6.4, 3.85, -120.5],
+    look: [-0.2, 1.35, -136.5],
+    packet: [-0.6, 0.35, -128.0],
   },
   {
     id: 'rag',
     kind: 'rag',
-    label: 'Alpine Peak Ascent · Jet Aircraft',
-    sector: 'STAGE 03 · TROPOSPHERE CLIMB',
-    coordinates: 'ALT 34,000 FT · SWEPT-WING JET',
-    povLabel: 'Left Wingman Ridge POV',
+    label: 'Bagian 03 · Keahlian',
+    sector: 'Bagian 03',
+    coordinates: '',
+    povLabel: { id: 'Lepas Landas & Balon Udara', en: 'Runway Takeoff & Alpine Sky' },
     vehicleStage: 'aircraft',
     cardSide: 'left',
-    anchor: [4.4, 7.8, -130],
-    cam: [-3.4, 9.2, -118.5],
-    look: [0.5, 8.2, -130],
-    packet: [0.0, 8.2, -125.5],
+    anchor: [-1.8, 6.4, -174.5],
+    cam: [-2.4, 5.2, -160.2],
+    look: [0.8, 4.9, -172.5],
+    packet: [2.3, 3.8, -169.5],
   },
   {
     id: 'proj-vora-ai',
     kind: 'project',
-    label: 'Vora AI · High-Altitude Cloud Deck',
-    sector: 'STAGE 03 · STRATOSPHERE CORRIDOR',
-    coordinates: 'ALT 48,000 FT · SWEPT-WING JET',
-    povLabel: 'Overhead Satellite Wing POV',
+    label: 'Bagian 04 · Vora AI',
+    sector: 'Bagian 04',
+    coordinates: '',
+    povLabel: { id: 'Pelayaran Langit & Awan Kota', en: 'Above the City Clouds' },
     vehicleStage: 'aircraft',
     cardSide: 'right',
-    anchor: [-4.4, 11.4, -162],
-    cam: [2.9, 16.4, -150.5],
-    look: [-0.5, 11.6, -162],
-    packet: [0.0, 11.6, -157.5],
+    anchor: [-0.2, 13.8, -210.5],
+    cam: [8.8, 16.2, -197.0],
+    look: [3.2, 13.6, -209.5],
+    packet: [4.8, 13.5, -208.5],
   },
   {
     id: 'proj-tiss',
     kind: 'project',
-    label: 'TISS · Karman Line Supersonic Climb',
-    sector: 'STAGE 03 · MESOSPHERE HORIZON',
-    coordinates: 'ALT 92,000 FT · SWEPT-WING JET',
-    povLabel: 'Low Belly-Up Climb POV',
+    label: 'Bagian 04 · TISS',
+    sector: 'Bagian 04',
+    coordinates: '',
+    povLabel: { id: 'Kompleks Peluncuran Roket', en: 'Highland Spaceport & Launchpad' },
     vehicleStage: 'aircraft',
     cardSide: 'left',
-    anchor: [4.4, 15.0, -194],
-    cam: [-2.9, 12.1, -182.5],
-    look: [0.55, 15.0, -194],
-    packet: [0.0, 15.0, -189.5],
+    anchor: [3.6, 7.2, -261.0],
+    cam: [-6.0, 9.5, -242.0],
+    look: [1.2, 8.2, -258.0],
+    packet: [-2.8, 6.2, -250.5],
   },
   {
     id: 'proj-neo-era-cuan',
     kind: 'project',
-    label: 'PT Neo Era Cuan · Lunar Orbital Insertion',
-    sector: 'STAGE 04 · CISLUNAR SPACE',
-    coordinates: 'DIST 384,400 KM · ORBITAL ROCKET',
-    povLabel: 'Right Orbital Insertion POV',
+    label: 'Bagian 04 · Neo Era Cuan',
+    sector: 'Bagian 04',
+    coordinates: '',
+    povLabel: { id: 'Lintasan Bulan', en: 'Lunar Trajectory' },
     vehicleStage: 'rocket',
     cardSide: 'right',
-    anchor: [-4.5, 21.2, -226],
-    cam: [3.2, 22.6, -214.2],
-    look: [-0.5, 21.2, -226],
-    packet: [0.0, 21.2, -221.2],
+    anchor: [-3.8, 24.8, -282.0],
+    cam: [5.4, 26.2, -268.5],
+    look: [-0.6, 24.8, -280.5],
+    packet: [1.5, 24.4, -277.8],
   },
   {
     id: 'proj-catat-crypto',
     kind: 'project',
-    label: 'Catat Crypto · Saturnian Ring Flyby',
-    sector: 'STAGE 04 · SATURNIAN SYSTEM',
-    coordinates: 'CASSINI DIVISION · ORBITAL ROCKET',
-    povLabel: 'Left Planetary Flyby POV',
+    label: 'Bagian 04 · Catat Crypto',
+    sector: 'Bagian 04',
+    coordinates: '',
+    povLabel: { id: 'Lintasan Mars & Jupiter', en: 'Mars & Jupiter Flyby' },
     vehicleStage: 'rocket',
     cardSide: 'left',
-    anchor: [4.8, 23.8, -258],
-    cam: [-3.4, 25.2, -246.2],
-    look: [0.6, 23.8, -258],
-    packet: [0.0, 23.8, -253.2],
+    anchor: [3.4, 28.9, -315.5],
+    cam: [-6.4, 30.4, -301.2],
+    look: [0.2, 29.0, -314.5],
+    packet: [-2.0, 28.9, -311.2],
   },
   {
     id: 'archive',
     kind: 'archive',
-    label: 'Martian Orbit & Satellite Payload Bay',
-    sector: 'STAGE 04 · MARTIAN FRONTIER',
-    coordinates: 'ARES TERRA · ORBITAL ROCKET',
-    povLabel: 'Top-Down Deep-Space Survey POV',
+    label: 'Bagian 05 · Arsip Karya',
+    sector: 'Bagian 05',
+    coordinates: '',
+    povLabel: { id: 'Cincin Saturnus & Satelit', en: 'Saturn Rings & Satellites' },
     vehicleStage: 'rocket',
     cardSide: 'right',
-    anchor: [-4.5, 26.0, -288],
-    cam: [2.6, 30.8, -276.2],
-    look: [-0.5, 26.0, -288],
-    packet: [0.0, 26.0, -283.2],
+    anchor: [-3.8, 32.8, -349.0],
+    cam: [5.4, 35.4, -334.5],
+    look: [-0.8, 32.8, -347.5],
+    packet: [1.7, 32.6, -344.5],
   },
   {
     id: 'delivered',
     kind: 'delivered',
-    label: 'Orbital Space Station · Final Contact',
-    sector: 'STAGE 04 · ORBITAL SANCTUARY',
-    coordinates: 'DOCKING COMPLETE · 200 OK',
-    povLabel: 'Final Orbital Docking POV',
+    label: 'Bagian 06 · Kontak & CV',
+    sector: 'Bagian 06',
+    coordinates: '',
+    povLabel: { id: 'Observatorium Ruang Angkasa Dalam', en: 'Deep-Space Observatory' },
     vehicleStage: 'rocket',
     cardSide: 'left',
-    anchor: [4.4, 27.8, -320],
-    cam: [-2.9, 28.8, -307.5],
-    look: [0.55, 27.8, -320],
-    packet: [0.0, 27.8, -315.5],
+    anchor: [1.5, 36.2, -382.5],
+    cam: [-5.2, 37.8, -367.5],
+    look: [1.8, 36.4, -384.0],
+    packet: [-0.6, 36.2, -378.0],
   },
 ];
 
@@ -789,11 +1096,11 @@ export const STOPS: SpatialStop[] = rawStops.map((s, index) => ({
 }));
 
 export const RAIL_GROUPS: RailGroup[] = [
-  { id: 'edge', label: '01 · Mountain Highway (Car)', host: 'CV & Profile', kinds: ['edge', 'proxy'] },
-  { id: 'services', label: '02 · Valley Viaduct (Train)', host: 'Experience', kinds: ['rack'] },
-  { id: 'ai', label: '03 · Alpine Sky (Aircraft)', host: 'Skills Stack', kinds: ['rag'] },
-  { id: 'racks', label: '04 · Deep Space (Rocket)', host: 'Projects', kinds: ['project', 'archive'] },
-  { id: 'delivered', label: '05 · Station Dock (Contact)', host: 'Direct CV', kinds: ['delivered'] },
+  { id: 'edge', label: '01 · Profil', host: 'Ringkasan', kinds: ['edge', 'proxy'] },
+  { id: 'services', label: '02 · Pengalaman', host: 'Karier', kinds: ['rack'] },
+  { id: 'ai', label: '03 · Keahlian', host: 'Kompetensi', kinds: ['rag'] },
+  { id: 'racks', label: '04 · Proyek', host: 'Karya', kinds: ['project', 'archive'] },
+  { id: 'delivered', label: '05 · Kontak', host: 'Hubungi', kinds: ['delivered'] },
 ];
 
 export function findStopIndex(id: string): number {
@@ -817,9 +1124,7 @@ export function getFirstStopIndexForRailGroup(groupIndex: number): number {
 }
 
 export interface HoveredNodeTelemetry {
-  name: string;
-  category: string;
-  metric: string;
+  hoverKey: string;
   screenX: number;
   screenY: number;
   stopIndex: number;
@@ -855,6 +1160,11 @@ export interface EngineLiveState {
     triangles: number;
     camZ: number;
   };
+  boot: {
+    progress: number;
+    stageKey: BootStageKey;
+    ready: boolean;
+  };
   hovered: HoveredNodeTelemetry | null;
 }
 
@@ -887,6 +1197,11 @@ export const engineState: EngineLiveState = {
     drawCalls: 48,
     triangles: 28400,
     camZ: 10.6,
+  },
+  boot: {
+    progress: 10,
+    stageKey: 'init',
+    ready: false,
   },
   hovered: null,
 };

@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
 import TerminalModal from '../components/TerminalModal';
+import Preloader from '../components/Preloader';
 import {
   ARCHIVE_PROJECTS,
   CERTIFICATIONS,
@@ -14,12 +15,10 @@ import {
   FAQS,
   FEATURED_PROJECTS,
   PROFILE,
-  RAIL_GROUPS,
   SKILL_CLUSTERS,
   STOPS,
   engineState,
   findStopIndex,
-  getActiveVehicleLabel,
   getFirstStopIndexForRailGroup,
   getRailGroupIndexForStop,
   notifyEngineUi,
@@ -27,6 +26,7 @@ import {
   sanitizeTextInput,
   subscribeEngineUi,
 } from '../data/portfolioJourney';
+import { PICKABLE_COPY, pickText, useI18n } from '../lib/i18n';
 import {
   installAudioAutoUnlock,
   playPulseSfx,
@@ -51,6 +51,7 @@ interface StopSectionProps {
   subtitleMeta?: string;
   level?: 1 | 2 | 3;
   minimized?: boolean;
+  minimizeLabel?: string;
   onToggleMinimize?: () => void;
   children: ReactNode;
 }
@@ -64,6 +65,7 @@ function StopSection({
   subtitleMeta,
   level = 3,
   minimized = false,
+  minimizeLabel,
   onToggleMinimize,
   children,
 }: StopSectionProps) {
@@ -111,8 +113,8 @@ function StopSection({
               className="instrument-toggle"
               onClick={onToggleMinimize}
               data-interactive-ui
-              aria-label={minimized ? 'Expand story card' : 'Minimize story card'}
-              title={minimized ? 'Expand Card' : 'Minimize Card to view 3D Scene'}
+              aria-label={minimizeLabel}
+              title={minimizeLabel}
             >
               <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 {minimized ? (
@@ -156,6 +158,7 @@ function TechList({ items }: { items: string[] }) {
 }
 
 export default function Landing({ onOpenResume }: LandingProps) {
+  const { locale, setLocale, copy } = useI18n();
   const progressBarRef = useRef<HTMLSpanElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<Lenis | null>(null);
@@ -176,7 +179,11 @@ export default function Landing({ onOpenResume }: LandingProps) {
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   useEffect(() => {
-    document.title = 'Akrom Fadhil — Fullstack, Multi-Agent AI & Distributed Systems';
+    document.documentElement.lang = locale;
+    document.title = copy.docTitle;
+  }, [locale, copy.docTitle]);
+
+  useEffect(() => {
     installAudioAutoUnlock();
     return subscribeEngineUi(() => {
       setUiTick((n) => n + 1);
@@ -371,9 +378,10 @@ export default function Landing({ onOpenResume }: LandingProps) {
     }
   };
 
-  const activeRailGroup = getRailGroupIndexForStop(activeStop);
+  const activeRailGroup = Math.max(0, getRailGroupIndexForStop(activeStop));
+  const activeChapter = copy.chapters[activeRailGroup] ?? copy.chapters[0];
   const hovered = engineState.hovered;
-  const activeStopMeta = STOPS[activeStop] ?? STOPS[0];
+  const hoveredMeta = hovered ? PICKABLE_COPY[hovered.hoverKey]?.[locale] : undefined;
 
   const handleContactSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -396,21 +404,24 @@ export default function Landing({ onOpenResume }: LandingProps) {
     setCardsMinimized((prev) => !prev);
   };
 
+  const minimizeAria = cardsMinimized ? copy.nav.expandCard : copy.nav.minimizeCard;
   const safeGithubProfile = sanitizeExternalUrl(PROFILE.github);
   const safeLinkedinProfile = sanitizeExternalUrl(PROFILE.linkedin);
   const safeWhatsappProfile = sanitizeExternalUrl(PROFILE.whatsapp);
 
   return (
     <div className="unreal-portfolio">
+      <Preloader />
+
       <a className="skip" href="#content">
-        Skip to content
+        {copy.skip}
       </a>
 
       <Suspense fallback={null}>
         <UnrealStage />
       </Suspense>
 
-      {hovered && engineState.cameraMode === 'rail' && (
+      {hovered && hoveredMeta && engineState.cameraMode === 'rail' && (
         <div
           className="reticle"
           style={{
@@ -420,9 +431,9 @@ export default function Landing({ onOpenResume }: LandingProps) {
         >
           <div className="reticle__crosshair" />
           <div className="reticle__card">
-            <span className="reticle__tag">{hovered.name}</span>
-            <span className="reticle__sub">{hovered.category}</span>
-            <span className="reticle__metric">{hovered.metric}</span>
+            <span className="reticle__tag">{hoveredMeta.title}</span>
+            <span className="reticle__sub">{hoveredMeta.subtitle}</span>
+            <span className="reticle__metric">{hoveredMeta.detail}</span>
           </div>
         </div>
       )}
@@ -432,6 +443,7 @@ export default function Landing({ onOpenResume }: LandingProps) {
           <a
             className="nav__home"
             href="#edge"
+            aria-label={copy.nav.homeAria}
             onClick={(e) => {
               e.preventDefault();
               scrollToStop(0);
@@ -440,19 +452,62 @@ export default function Landing({ onOpenResume }: LandingProps) {
             {PROFILE.handle}
           </a>
 
-          <span className="nav__stage-indicator">
-            {getActiveVehicleLabel(engineState.target)} · {activeStopMeta.povLabel}
-          </span>
+          <span className="nav__pill">{activeChapter.short}</span>
         </div>
 
         <nav aria-label="Primary" className="nav__links">
+          <div className="lang-switch" role="group" aria-label="Language">
+            <button
+              type="button"
+              className={`lang-switch__btn ${locale === 'id' ? 'lang-switch__btn--active' : ''}`}
+              onClick={() => setLocale('id')}
+              aria-pressed={locale === 'id'}
+            >
+              ID
+            </button>
+            <button
+              type="button"
+              className={`lang-switch__btn ${locale === 'en' ? 'lang-switch__btn--active' : ''}`}
+              onClick={() => setLocale('en')}
+              aria-pressed={locale === 'en'}
+            >
+              EN
+            </button>
+          </div>
+
           <button
             type="button"
-            className={`btn btn--small ${engineState.audioEnabled ? 'btn--active' : ''}`}
+            className={`btn btn--small nav__audio ${engineState.audioEnabled ? 'btn--active' : ''}`}
             onClick={() => toggleSoundEngine()}
-            aria-label="Toggle background music and soundscape"
+            aria-label={copy.nav.soundAria}
+            aria-pressed={engineState.audioEnabled}
           >
-            {engineState.audioEnabled ? 'Sound On' : 'Muted'}
+            <svg viewBox="0 0 16 16" fill="none" className="nav__icon" aria-hidden="true">
+              <path
+                d="M2.5 6.2H5.2L8.8 3.2V12.8L5.2 9.8H2.5V6.2Z"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinejoin="round"
+              />
+              {engineState.audioEnabled ? (
+                <path
+                  d="M11.2 5.4C12 6.2 12.4 7.1 12.4 8C12.4 8.9 12 9.8 11.2 10.6"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path
+                  d="M11 6L14 10M14 6L11 10"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+            <span className="nav__audio-label">
+              {engineState.audioEnabled ? copy.nav.soundOn : copy.nav.soundOff}
+            </span>
           </button>
 
           <div className="nav-dropdown" ref={dropdownRef}>
@@ -463,7 +518,7 @@ export default function Landing({ onOpenResume }: LandingProps) {
               aria-haspopup="true"
               onClick={() => setFeaturesOpen((prev) => !prev)}
             >
-              <span>Features</span>
+              <span>{copy.nav.menu}</span>
               <svg
                 className={`nav-dropdown__chevron ${featuresOpen ? 'nav-dropdown__chevron--open' : ''}`}
                 viewBox="0 0 16 16"
@@ -481,9 +536,32 @@ export default function Landing({ onOpenResume }: LandingProps) {
             </button>
 
             {featuresOpen && (
-              <div className="nav-dropdown__menu" role="menu" aria-label="3D Controls and Chapters">
+              <div className="nav-dropdown__menu" role="menu" aria-label={copy.nav.chaptersHeading}>
                 <div className="nav-dropdown__group">
-                  <p className="nav-dropdown__heading">3D Viewport Controls</p>
+                  <p className="nav-dropdown__heading">{copy.nav.chaptersHeading}</p>
+                  {copy.chapters.map((chapter, idx) => {
+                    const firstIdx = getFirstStopIndexForRailGroup(idx);
+                    const isCurrent = idx === activeRailGroup;
+                    return (
+                      <button
+                        key={chapter.id}
+                        type="button"
+                        role="menuitem"
+                        className={`nav-dropdown__item ${isCurrent ? 'nav-dropdown__item--active' : ''}`}
+                        onClick={() => {
+                          scrollToStop(firstIdx);
+                          setFeaturesOpen(false);
+                        }}
+                      >
+                        <span>{chapter.label}</span>
+                        <strong>{chapter.sub}</strong>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="nav-dropdown__group">
+                  <p className="nav-dropdown__heading">{copy.nav.viewHeading}</p>
                   <button
                     type="button"
                     role="menuitem"
@@ -494,8 +572,27 @@ export default function Landing({ onOpenResume }: LandingProps) {
                       setFeaturesOpen(false);
                     }}
                   >
-                    <span>Camera Mode</span>
-                    <strong>{engineState.cameraMode === 'rail' ? 'Multi-POV' : '3D Orbit'}</strong>
+                    <span>{copy.nav.cameraMode}</span>
+                    <strong>
+                      {engineState.cameraMode === 'rail'
+                        ? copy.nav.cameraGuided
+                        : copy.nav.cameraOrbit}
+                    </strong>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="nav-dropdown__item"
+                    onClick={() => {
+                      toggleMinimizeAll();
+                      setFeaturesOpen(false);
+                    }}
+                  >
+                    <span>{copy.nav.cardsToggle}</span>
+                    <strong>
+                      {cardsMinimized ? copy.nav.cardsMinimal : copy.nav.cardsVisible}
+                    </strong>
                   </button>
 
                   <button
@@ -508,21 +605,8 @@ export default function Landing({ onOpenResume }: LandingProps) {
                       setFeaturesOpen(false);
                     }}
                   >
-                    <span>Propulsion Boost</span>
-                    <strong>Trigger (Space)</strong>
-                  </button>
-
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="nav-dropdown__item"
-                    onClick={() => {
-                      toggleMinimizeAll();
-                      setFeaturesOpen(false);
-                    }}
-                  >
-                    <span>Story Cards</span>
-                    <strong>{cardsMinimized ? 'Hidden' : 'Visible'}</strong>
+                    <span>{copy.nav.motionBoost}</span>
+                    <strong>{copy.nav.motionBoostKey}</strong>
                   </button>
 
                   <button
@@ -534,32 +618,22 @@ export default function Landing({ onOpenResume }: LandingProps) {
                       setTerminalOpen(true);
                     }}
                   >
-                    <span>Command Shell</span>
-                    <strong>Open CLI (`)</strong>
+                    <span>{copy.nav.quickJump}</span>
+                    <strong>{copy.nav.quickJumpKey}</strong>
                   </button>
-                </div>
 
-                <div className="nav-dropdown__group">
-                  <p className="nav-dropdown__heading">Journey Stages</p>
-                  {RAIL_GROUPS.map((group, idx) => {
-                    const firstIdx = getFirstStopIndexForRailGroup(idx);
-                    const isCurrent = idx === activeRailGroup;
-                    return (
-                      <button
-                        key={group.id}
-                        type="button"
-                        role="menuitem"
-                        className={`nav-dropdown__item ${isCurrent ? 'nav-dropdown__item--active' : ''}`}
-                        onClick={() => {
-                          scrollToStop(firstIdx);
-                          setFeaturesOpen(false);
-                        }}
-                      >
-                        <span>{group.label}</span>
-                        <strong>{group.host}</strong>
-                      </button>
-                    );
-                  })}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="nav-dropdown__item nav-dropdown__mobile-only"
+                    onClick={() => {
+                      setFeaturesOpen(false);
+                      onOpenResume();
+                    }}
+                  >
+                    <span>{copy.resume.headingSuffix}</span>
+                    <strong>{copy.nav.cv}</strong>
+                  </button>
                 </div>
               </div>
             )}
@@ -567,21 +641,21 @@ export default function Landing({ onOpenResume }: LandingProps) {
 
           <button
             type="button"
-            className="btn btn--small"
+            className="btn btn--small nav__desktop-action"
             onClick={onOpenResume}
           >
-            CV
+            {copy.nav.cv}
           </button>
 
           <a
             href="#delivered"
-            className="btn btn--small btn--amber"
+            className="btn btn--small btn--amber nav__desktop-action"
             onClick={(e) => {
               e.preventDefault();
               scrollToStop(findStopIndex('delivered'));
             }}
           >
-            Contact
+            {copy.nav.contact}
           </a>
         </nav>
 
@@ -597,8 +671,9 @@ export default function Landing({ onOpenResume }: LandingProps) {
           side={STOPS[0].cardSide}
           level={1}
           title={PROFILE.name}
-          subtitleMeta={`${STOPS[0].sector} · ${STOPS[0].povLabel}`}
+          subtitleMeta={`${copy.hero.chapterMeta} · ${pickText(locale, STOPS[0].povLabel)}`}
           minimized={cardsMinimized}
+          minimizeLabel={minimizeAria}
           onToggleMinimize={toggleMinimizeAll}
         >
           <div className="cv-profile-row">
@@ -608,12 +683,12 @@ export default function Landing({ onOpenResume }: LandingProps) {
               className="cv-profile-row__avatar"
             />
             <div>
-              <p className="hero__role">{PROFILE.title}</p>
+              <p className="hero__role">{copy.hero.role}</p>
               <p className="meta">{PROFILE.location}</p>
             </div>
           </div>
 
-          <p className="lede">{PROFILE.bio}</p>
+          <p className="lede">{copy.hero.bio}</p>
 
           <div className="hero__actions" data-interactive-ui>
             <button
@@ -621,27 +696,27 @@ export default function Landing({ onOpenResume }: LandingProps) {
               className="btn btn--amber"
               onClick={() => scrollToStop(findStopIndex('proxy'))}
             >
-              Read CV & Summary
+              {copy.hero.ctaSummary}
             </button>
             <button
               type="button"
               className="btn"
               onClick={onOpenResume}
             >
-              Full CV Modal
+              {copy.hero.ctaCv}
             </button>
             <a
               href={PROFILE.avatarUrl}
               download="Akrom_Fadhil_CV.jpeg"
               className="btn"
             >
-              Download CV
+              {copy.hero.ctaDownload}
             </a>
           </div>
 
           <p className="hero__cue">
             <span className="hero__dot" aria-hidden="true" />
-            Scroll through the Alpine Highway (Car) → Viaduct (Train) → Sky (Jet) → Space (Rocket)
+            {copy.hero.cue}
           </p>
         </StopSection>
 
@@ -649,17 +724,18 @@ export default function Landing({ onOpenResume }: LandingProps) {
           id="proxy"
           side={STOPS[1].cardSide}
           level={2}
-          title="Curriculum Vitae & Summary"
-          subtitleMeta={`${STOPS[1].sector} · ${STOPS[1].povLabel}`}
+          title={copy.summary.title}
+          subtitleMeta={`${copy.summary.chapterMeta} · ${pickText(locale, STOPS[1].povLabel)}`}
           minimized={cardsMinimized}
+          minimizeLabel={minimizeAria}
           onToggleMinimize={toggleMinimizeAll}
         >
           <dl className="stats">
             {PROFILE.stats.map((stat) => (
-              <div key={stat.label}>
+              <div key={stat.value}>
                 <dt>
-                  {stat.label}
-                  <span className="stats__detail">{stat.detail}</span>
+                  {pickText(locale, stat.label)}
+                  <span className="stats__detail">{pickText(locale, stat.detail)}</span>
                 </dt>
                 <dd>{stat.value}</dd>
               </div>
@@ -667,18 +743,20 @@ export default function Landing({ onOpenResume }: LandingProps) {
           </dl>
 
           <ul className="story">
-            {PROFILE.aboutStory.map((paragraph) => (
+            {PROFILE.aboutStory[locale].map((paragraph) => (
               <li key={paragraph}>{paragraph}</li>
             ))}
           </ul>
 
           <div className="cv-inline-block">
-            <h3>Academic Education</h3>
+            <h3>{copy.summary.educationHeading}</h3>
             <ul className="cv-edu-list">
               {EDUCATION.map((edu) => (
                 <li key={edu.institution}>
                   <strong>{edu.institution}</strong>
-                  <span>{edu.degree} ({edu.period})</span>
+                  <span>
+                    {pickText(locale, edu.degree)} ({pickText(locale, edu.period)})
+                  </span>
                 </li>
               ))}
             </ul>
@@ -686,7 +764,7 @@ export default function Landing({ onOpenResume }: LandingProps) {
 
           <div className="links" data-interactive-ui>
             <button type="button" className="btn btn--small btn--amber" onClick={onOpenResume}>
-              Open Interactive CV
+              {copy.summary.openCv}
             </button>
             {safeGithubProfile && (
               <a href={safeGithubProfile} target="_blank" rel="noopener noreferrer">
@@ -703,13 +781,14 @@ export default function Landing({ onOpenResume }: LandingProps) {
 
         <section className="group" aria-labelledby="experience-title">
           <h2 id="experience-title" className="group__title">
-            Stage 02 · Mountain Gorge Viaduct · Work Experience
+            {copy.experience.groupTitle}
           </h2>
 
           {EXPERIENCES.map((exp, idx) => {
             const stopMeta = STOPS[2 + idx];
             const isExpOpen = expandedExpId === exp.id;
             const safeRepoUrl = sanitizeExternalUrl(exp.liveUrl);
+            const locBullets = exp.description[locale];
             return (
               <StopSection
                 key={exp.id}
@@ -717,20 +796,21 @@ export default function Landing({ onOpenResume }: LandingProps) {
                 as="article"
                 side={stopMeta?.cardSide ?? 'left'}
                 className={exp.isCurrent ? 'stop--current' : ''}
-                title={exp.role}
-                subtitleMeta={`${exp.company} · ${exp.period} · ${stopMeta?.povLabel ?? ''}`}
+                title={pickText(locale, exp.role)}
+                subtitleMeta={`${exp.company} · ${pickText(locale, exp.period)} · ${stopMeta ? pickText(locale, stopMeta.povLabel) : ''}`}
                 minimized={cardsMinimized}
+                minimizeLabel={minimizeAria}
                 onToggleMinimize={toggleMinimizeAll}
               >
                 <p className="meta meta--amber">
-                  {exp.metricsBadge} · {exp.location}
+                  {pickText(locale, exp.metricsBadge)} · {pickText(locale, exp.location)}
                 </p>
 
-                <p className="lede lede--small">{exp.description[0]}</p>
+                <p className="lede lede--small">{locBullets[0]}</p>
 
-                {isExpOpen && exp.description.length > 1 && (
+                {isExpOpen && locBullets.length > 1 && (
                   <ul className="points">
-                    {exp.description.slice(1).map((bullet) => (
+                    {locBullets.slice(1).map((bullet) => (
                       <li key={bullet}>{bullet}</li>
                     ))}
                   </ul>
@@ -739,18 +819,18 @@ export default function Landing({ onOpenResume }: LandingProps) {
                 <TechList items={exp.technologies} />
 
                 <div className="links" data-interactive-ui>
-                  {exp.description.length > 1 && (
+                  {locBullets.length > 1 && (
                     <button
                       type="button"
                       className="btn btn--small"
                       onClick={() => setExpandedExpId(isExpOpen ? null : exp.id)}
                     >
-                      {isExpOpen ? 'Show Less' : 'Read Full Scope'}
+                      {isExpOpen ? copy.experience.readLess : copy.experience.readMore}
                     </button>
                   )}
                   {safeRepoUrl && (
                     <a href={safeRepoUrl} target="_blank" rel="noopener noreferrer">
-                      View Repository
+                      {copy.experience.viewRepo}
                     </a>
                   )}
                 </div>
@@ -763,17 +843,22 @@ export default function Landing({ onOpenResume }: LandingProps) {
           id="rag"
           side={STOPS[findStopIndex('rag')]?.cardSide ?? 'left'}
           level={2}
-          title="Technical & Soft Skills"
-          subtitleMeta={`${STOPS[findStopIndex('rag')]?.sector ?? ''} · ${STOPS[findStopIndex('rag')]?.povLabel ?? ''}`}
+          title={copy.skills.title}
+          subtitleMeta={`${copy.skills.chapterMeta} · ${pickText(locale, STOPS[findStopIndex('rag')]?.povLabel ?? { id: '', en: '' })}`}
           minimized={cardsMinimized}
+          minimizeLabel={minimizeAria}
           onToggleMinimize={toggleMinimizeAll}
         >
           <div className="skills">
             {SKILL_CLUSTERS.map((cluster) => (
-              <section key={cluster.id} aria-label={cluster.title} className="skills__card">
-                <h3>{cluster.title}</h3>
+              <section
+                key={cluster.id}
+                aria-label={pickText(locale, cluster.title)}
+                className="skills__card"
+              >
+                <h3>{pickText(locale, cluster.title)}</h3>
                 <ul>
-                  {cluster.skills.map((skill) => (
+                  {cluster.skills[locale].map((skill) => (
                     <li key={skill}>{skill}</li>
                   ))}
                 </ul>
@@ -784,7 +869,7 @@ export default function Landing({ onOpenResume }: LandingProps) {
 
         <section className="group" aria-labelledby="projects-title">
           <h2 id="projects-title" className="group__title">
-            Stages 03 & 04 · Alpine Sky to Deep Space · Flagship Projects
+            {copy.projects.groupTitle}
           </h2>
 
           {FEATURED_PROJECTS.map((proj) => {
@@ -798,34 +883,36 @@ export default function Landing({ onOpenResume }: LandingProps) {
                 as="article"
                 side={stopMeta?.cardSide ?? 'left'}
                 title={proj.title}
-                subtitleMeta={`${proj.subtitle} · ${stopMeta?.povLabel ?? ''}`}
+                subtitleMeta={`${pickText(locale, proj.subtitle)} · ${stopMeta ? pickText(locale, stopMeta.povLabel) : ''}`}
                 minimized={cardsMinimized}
+                minimizeLabel={minimizeAria}
                 onToggleMinimize={toggleMinimizeAll}
               >
                 <p className="meta">
-                  {proj.role} · <span className="meta--amber">{proj.metric}</span>
+                  {pickText(locale, proj.role)} ·{' '}
+                  <span className="meta--amber">{pickText(locale, proj.metric)}</span>
                 </p>
-                <p className="lede lede--small">{proj.summary}</p>
+                <p className="lede lede--small">{pickText(locale, proj.summary)}</p>
 
                 {isExpanded && (
                   <div className="case-study-drawer" data-interactive-ui>
                     <ul className="points">
-                      {proj.highlights.map((h) => (
+                      {proj.highlights[locale].map((h) => (
                         <li key={h}>{h}</li>
                       ))}
                     </ul>
                     <div className="case-study-drawer__grid">
                       <div>
-                        <h4>Problem</h4>
-                        <p>{proj.problem}</p>
+                        <h4>{copy.projects.problemLabel}</h4>
+                        <p>{pickText(locale, proj.problem)}</p>
                       </div>
                       <div>
-                        <h4>Architecture Approach</h4>
-                        <p>{proj.approach}</p>
+                        <h4>{copy.projects.approachLabel}</h4>
+                        <p>{pickText(locale, proj.approach)}</p>
                       </div>
                       <div>
-                        <h4>Measured Outcome</h4>
-                        <p>{proj.outcome}</p>
+                        <h4>{copy.projects.outcomeLabel}</h4>
+                        <p>{pickText(locale, proj.outcome)}</p>
                       </div>
                     </div>
                   </div>
@@ -841,12 +928,12 @@ export default function Landing({ onOpenResume }: LandingProps) {
                       setExpandedCaseStudy(isExpanded ? null : proj.id)
                     }
                   >
-                    {isExpanded ? 'Hide Architecture' : 'Architecture Breakdown'}
+                    {isExpanded ? copy.projects.hideBreakdown : copy.projects.showBreakdown}
                   </button>
-                  <Link to={`/projects/${proj.slug}`}>Case Study</Link>
+                  <Link to={`/projects/${proj.slug}`}>{copy.projects.caseStudy}</Link>
                   {safeProjGithub && (
                     <a href={safeProjGithub} target="_blank" rel="noopener noreferrer">
-                      Source on GitHub
+                      {copy.projects.sourceGithub}
                     </a>
                   )}
                 </div>
@@ -858,9 +945,10 @@ export default function Landing({ onOpenResume }: LandingProps) {
             id="archive"
             className="stop--wide"
             side={STOPS[findStopIndex('archive')]?.cardSide ?? 'right'}
-            title="Additional Production Systems"
-            subtitleMeta={`${STOPS[findStopIndex('archive')]?.sector ?? ''} · ${STOPS[findStopIndex('archive')]?.povLabel ?? ''}`}
+            title={copy.projects.archiveTitle}
+            subtitleMeta={`${copy.projects.archiveMeta} · ${pickText(locale, STOPS[findStopIndex('archive')]?.povLabel ?? { id: '', en: '' })}`}
             minimized={cardsMinimized}
+            minimizeLabel={minimizeAria}
             onToggleMinimize={toggleMinimizeAll}
           >
             <ul className="archive">
@@ -869,10 +957,10 @@ export default function Landing({ onOpenResume }: LandingProps) {
                   <article>
                     <div className="archive__head">
                       <h4>{ap.title}</h4>
-                      <span className="meta meta--amber">{ap.metric}</span>
+                      <span className="meta meta--amber">{pickText(locale, ap.metric)}</span>
                     </div>
-                    <p className="archive__sub">{ap.subtitle}</p>
-                    <p>{ap.summary}</p>
+                    <p className="archive__sub">{pickText(locale, ap.subtitle)}</p>
+                    <p>{pickText(locale, ap.summary)}</p>
                     <TechList items={ap.technologies} />
                   </article>
                 </li>
@@ -886,9 +974,10 @@ export default function Landing({ onOpenResume }: LandingProps) {
           className="stop--wide stop--last"
           side={STOPS[findStopIndex('delivered')]?.cardSide ?? 'left'}
           level={2}
-          title="Curriculum Vitae & Contact"
-          subtitleMeta={`${STOPS[findStopIndex('delivered')]?.sector ?? ''} · ${STOPS[findStopIndex('delivered')]?.povLabel ?? ''}`}
+          title={copy.contact.title}
+          subtitleMeta={`${copy.contact.chapterMeta} · ${pickText(locale, STOPS[findStopIndex('delivered')]?.povLabel ?? { id: '', en: '' })}`}
           minimized={cardsMinimized}
+          minimizeLabel={minimizeAria}
           onToggleMinimize={toggleMinimizeAll}
         >
           <p className="contact__mail" data-interactive-ui>
@@ -912,74 +1001,80 @@ export default function Landing({ onOpenResume }: LandingProps) {
               </a>
             )}
             <button type="button" className="btn btn--small" onClick={onOpenResume}>
-              Open Digital CV
+              {copy.contact.openCv}
             </button>
           </p>
 
           <div className="transmission-grid" data-interactive-ui>
             <form className="transmission-form" onSubmit={handleContactSubmit}>
-              <h3 className="transmission-form__title">Send a Direct Message</h3>
+              <h3 className="transmission-form__title">{copy.contact.formTitle}</h3>
               <div className="transmission-form__row">
                 <label>
-                  <span>Name</span>
+                  <span>{copy.contact.nameLabel}</span>
                   <input
                     type="text"
                     required
                     maxLength={80}
-                    placeholder="Your Name / Organization"
+                    placeholder={copy.contact.namePlaceholder}
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                   />
                 </label>
                 <label>
-                  <span>Email</span>
+                  <span>{copy.contact.emailLabel}</span>
                   <input
                     type="email"
                     required
                     maxLength={80}
-                    placeholder="you@company.com"
+                    placeholder={copy.contact.emailPlaceholder}
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                   />
                 </label>
               </div>
               <label>
-                <span>Message</span>
+                <span>{copy.contact.messageLabel}</span>
                 <textarea
                   rows={3}
                   required
                   maxLength={600}
-                  placeholder="Describe your project, architecture needs, or engineering role..."
+                  placeholder={copy.contact.messagePlaceholder}
                   value={contactMsg}
                   onChange={(e) => setContactMsg(e.target.value)}
                 />
               </label>
               <div className="transmission-form__actions">
-                <button type="submit" className="btn btn--amber" disabled={contactStatus === 'sending'}>
-                  {contactStatus === 'sending' ? 'Sending...' : 'Send Message'}
+                <button
+                  type="submit"
+                  className="btn btn--amber"
+                  disabled={contactStatus === 'sending'}
+                >
+                  {contactStatus === 'sending'
+                    ? copy.contact.submitSending
+                    : copy.contact.submitIdle}
                 </button>
                 {contactStatus === 'sent' && (
                   <span className="transmission-form__ack">
-                    Message verified and queued for {PROFILE.email}
+                    {copy.contact.ackPrefix} {PROFILE.email}.
                   </span>
                 )}
               </div>
             </form>
 
             <div className="faq-panel">
-              <h3 className="transmission-form__title">Frequently Asked Questions</h3>
+              <h3 className="transmission-form__title">{copy.contact.faqTitle}</h3>
               <div className="faq-list">
                 {FAQS.map((faq, idx) => {
                   const isOpen = openFaqIndex === idx;
                   return (
-                    <div key={faq.question} className="faq-item">
+                    <div key={faq.question.en} className="faq-item">
                       <button
                         type="button"
                         className="faq-item__q"
                         onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                         aria-expanded={isOpen}
                       >
-                        <span>{faq.question}</span>
+                        <span>{pickText(locale, faq.question)}</span>
                         <svg
                           className={`faq-item__chevron ${isOpen ? 'faq-item__chevron--open' : ''}`}
                           viewBox="0 0 16 16"
@@ -995,7 +1090,7 @@ export default function Landing({ onOpenResume }: LandingProps) {
                           />
                         </svg>
                       </button>
-                      {isOpen && <p className="faq-item__a">{faq.answer}</p>}
+                      {isOpen && <p className="faq-item__a">{pickText(locale, faq.answer)}</p>}
                     </div>
                   );
                 })}
@@ -1005,14 +1100,15 @@ export default function Landing({ onOpenResume }: LandingProps) {
 
           <div className="creds">
             <section aria-labelledby="education-title">
-              <h3 id="education-title">Education</h3>
+              <h3 id="education-title">{copy.contact.educationTitle}</h3>
               <ul>
                 {EDUCATION.map((edu) => (
                   <li key={edu.institution}>
-                    <strong>{edu.degree}</strong>
+                    <strong>{pickText(locale, edu.degree)}</strong>
                     <span>{edu.institution}</span>
                     <span className="meta">
-                      {edu.period} · {edu.location} — {edu.highlight}
+                      {pickText(locale, edu.period)} · {edu.location} —{' '}
+                      {pickText(locale, edu.highlight)}
                     </span>
                   </li>
                 ))}
@@ -1020,13 +1116,13 @@ export default function Landing({ onOpenResume }: LandingProps) {
             </section>
 
             <section aria-labelledby="certs-title">
-              <h3 id="certs-title">Experience & Credentials</h3>
+              <h3 id="certs-title">{copy.contact.credentialsTitle}</h3>
               <ul>
                 {CERTIFICATIONS.map((cert) => (
-                  <li key={cert.title}>
-                    <strong>{cert.title}</strong>
+                  <li key={cert.issuer}>
+                    <strong>{pickText(locale, cert.title)}</strong>
                     <span>
-                      {cert.issuer} · {cert.badge}
+                      {cert.issuer} · {pickText(locale, cert.badge)}
                     </span>
                   </li>
                 ))}
@@ -1034,9 +1130,7 @@ export default function Landing({ onOpenResume }: LandingProps) {
             </section>
           </div>
 
-          <p className="meta footer">
-            {PROFILE.fullName} · {PROFILE.location}. Press <kbd>`</kbd> for CLI or <kbd>Space</kbd> for boost.
-          </p>
+          <p className="meta footer">{copy.contact.footerNote}</p>
         </StopSection>
       </main>
 

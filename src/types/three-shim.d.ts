@@ -48,6 +48,7 @@ declare module 'three' {
     copy(v: Vector3): this;
     clone(): Vector3;
     add(v: Vector3): this;
+    addVectors(a: Vector3, b: Vector3): this;
     sub(v: Vector3): this;
     subVectors(a: Vector3, b: Vector3): this;
     addScaledVector(v: Vector3, s: number): this;
@@ -60,6 +61,9 @@ declare module 'three' {
     length(): number;
     dot(v: Vector3): number;
     cross(v: Vector3): this;
+    crossVectors(a: Vector3, b: Vector3): this;
+    applyQuaternion(q: Quaternion): this;
+    negate(): this;
     toArray(): [number, number, number];
     fromBufferAttribute(attribute: BufferAttribute, index: number): this;
     project(camera: Camera): this;
@@ -83,6 +87,7 @@ declare module 'three' {
     setFromAxisAngle(axis: Vector3, angle: number): this;
     setFromEuler(euler: Euler): this;
     setFromRotationMatrix(m: Matrix4): this;
+    setFromUnitVectors(vFrom: Vector3, vTo: Vector3): this;
     multiply(q: Quaternion): this;
     slerp(qb: Quaternion, t: number): this;
     copy(q: Quaternion): this;
@@ -94,8 +99,10 @@ declare module 'three' {
     identity(): this;
     setPosition(x: number | Vector3, y?: number, z?: number): this;
     makeTranslation(x: number, y: number, z: number): this;
+    makeRotationX(theta: number): this;
     makeRotationY(theta: number): this;
     makeRotationZ(theta: number): this;
+    makeBasis(xAxis: Vector3, yAxis: Vector3, zAxis: Vector3): this;
     makeScale(x: number, y: number, z: number): this;
     lookAt(eye: Vector3, target: Vector3, up: Vector3): this;
     compose(position: Vector3, quaternion: Quaternion, scale: Vector3): this;
@@ -381,7 +388,15 @@ declare module 'three' {
 
   export class Curve<T extends Vector2 | Vector3> {
     getPoint(t: number, optionalTarget?: T): T;
+    getPointAt(u: number, optionalTarget?: T): T;
+    getTangent(t: number, optionalTarget?: T): T;
+    getTangentAt(u: number, optionalTarget?: T): T;
+    getLength(): number;
     getPoints(divisions?: number): T[];
+  }
+
+  export class SplineCurve extends Curve<Vector2> {
+    constructor(points?: Vector2[]);
   }
 
   export class LineCurve3 extends Curve<Vector3> {
@@ -451,6 +466,7 @@ declare module 'three' {
     name: string;
     transparent: boolean;
     opacity: number;
+    alphaTest: number;
     depthWrite: boolean;
     depthTest: boolean;
     side: number;
@@ -501,6 +517,9 @@ declare module 'three' {
     bumpMap: Texture | null;
     bumpScale: number;
     roughnessMap: Texture | null;
+    metalnessMap: Texture | null;
+    aoMap: Texture | null;
+    aoMapIntensity: number;
     alphaMap: Texture | null;
     emissive: Color;
     emissiveMap: Texture | null;
@@ -724,7 +743,8 @@ declare module 'three' {
     setClearColor(color: Color | number | string, alpha?: number): void;
     render(scene: Scene, camera: Camera): void;
     setAnimationLoop(callback: ((time: number) => void) | null): void;
-    compileAsync(scene: Scene, camera: Camera): Promise<Scene>;
+    compileAsync(scene: Object3D, camera: Camera, targetScene?: Scene | null): Promise<Object3D>;
+    initTexture(texture: Texture): void;
     dispose(): void;
     forceContextLoss(): void;
   }

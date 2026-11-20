@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { PALETTE_NUM } from '../../data/portfolioJourney';
+import type { JourneyCurves } from './routeMath';
 import {
   createAerospaceHullTexture,
   createCeramicHeatShieldTexture,
@@ -15,23 +16,31 @@ import {
   ROCKET_PLUME_VERTEX,
 } from './shaders';
 
+export interface StarshipUpdateResult {
+  activePos: THREE.Vector3;
+  rocketLaunchProgress: number;
+  spaceFactor: number;
+}
+
 export interface StarshipController {
   root: THREE.Group;
+  carRoot: THREE.Group;
+  trainRoot: THREE.Group;
+  aircraftRoot: THREE.Group;
+  rocketRoot: THREE.Group;
   trailLines: THREE.Object3D[];
+  ready: Promise<void>;
   update(
     dt: number,
     elapsed: number,
     progressT: number,
-    position: THREE.Vector3,
-    tangent: THREE.Vector3,
-    nextTangent: THREE.Vector3,
+    curves: JourneyCurves,
     velocity: number,
     boost: number,
     pointerX: number,
     pointerY: number,
-    scaleMultiplier: number,
-    nearestPlanetDist?: number
-  ): number;
+    scaleMultiplier: number
+  ): StarshipUpdateResult;
   dispose(): void;
 }
 
@@ -223,8 +232,12 @@ export function createStarshipRocket(
     color: 0xf59e0b,
   });
 
+  const carRoot = new THREE.Group();
+  root.add(carRoot);
+
   const carGroup = new THREE.Group();
-  root.add(carGroup);
+  carGroup.position.y = 0.205;
+  carRoot.add(carGroup);
 
   const fallbackCarGroup = new THREE.Group();
   carGroup.add(fallbackCarGroup);
@@ -557,7 +570,7 @@ export function createStarshipRocket(
     taillightPod
   );
 
-  gltfLoader
+  const ready = gltfLoader
     .loadAsync('/assets/models/porsche959.glb')
     .then((gltf) => {
       if (carDisposed) {
@@ -581,14 +594,170 @@ export function createStarshipRocket(
       model.position.y += -0.205 - bounds.min.y;
       model.position.z -= center.z;
 
+      const keepPhysicalNames = new Set([
+        'carpaint',
+        'windows_ext',
+        'lights_glass',
+        'detail_glass_clear',
+        'black_glass',
+      ]);
+      const glassNames = new Set([
+        'windows_ext',
+        'lights_glass',
+        'detail_glass_clear',
+        'black_glass',
+      ]);
+      const cabinGlassNames = new Set(['windows_ext', 'black_glass']);
+      const cutoutNames = new Set([
+        'EXT_grille1',
+        'EXT_Disc',
+        'EXT_emblem',
+        'EXT_PLATE',
+        '959_crest',
+      ]);
+      const prunedMeshes: THREE.Object3D[] = [];
+      const keptTextures = new Set<THREE.Texture>();
+      model.traverse((obj) => {
+        if (!obj.isMesh || !obj.material) return;
+        const origMats: THREE.Material[] = Array.isArray(obj.material)
+          ? obj.material
+          : [obj.material];
+        const isInteriorOnly =
+          obj.name.startsWith('steering_wheel') ||
+          origMats.every((m) => m.name.startsWith('INT_'));
+        if (isInteriorOnly) {
+          prunedMeshes.push(obj);
+        } else {
+          origMats.forEach((m) => {
+            const std = m as THREE.MeshStandardMaterial;
+            [
+              std.map,
+              std.normalMap,
+              std.roughnessMap,
+              std.metalnessMap,
+              std.aoMap,
+              std.emissiveMap,
+            ].forEach((tx) => {
+              if (tx) keptTextures.add(tx);
+            });
+          });
+        }
+      });
+      prunedMeshes.forEach((mesh) => {
+        if (mesh.parent) {
+          mesh.parent.remove(mesh);
+        }
+        if (mesh.geometry) {
+          mesh.geometry.dispose();
+        }
+        if (mesh.material) {
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          mats.forEach((m) => {
+            const std = m as THREE.MeshStandardMaterial;
+            [
+              std.map,
+              std.normalMap,
+              std.roughnessMap,
+              std.metalnessMap,
+              std.aoMap,
+              std.emissiveMap,
+            ].forEach((tx) => {
+              if (tx && !keptTextures.has(tx)) tx.dispose();
+            });
+            m.dispose();
+          });
+        }
+      });
+
+      const maxCarAniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+      const uploadedTex = new Set<THREE.Texture>();
+      const simplifiedMatCache = new Map<THREE.Material, THREE.Material>();
       model.traverse((obj) => {
         if (obj.isMesh && obj.material) {
-          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-          mats.forEach((m) => {
-            if ('envMapIntensity' in m) {
-              (m as THREE.MeshStandardMaterial).envMapIntensity = 0.85;
+          obj.frustumCulled = true;
+          const origMats: THREE.Material[] = Array.isArray(obj.material)
+            ? obj.material
+            : [obj.material];
+          const nextMats = origMats.map((orig) => {
+            const cached = simplifiedMatCache.get(orig);
+            if (cached) return cached;
+
+            const src = orig as THREE.MeshStandardMaterial;
+            const isGlass = glassNames.has(orig.name);
+            const isCabinGlass = cabinGlassNames.has(orig.name);
+            const isCutout = cutoutNames.has(orig.name);
+            let targetMat: THREE.Material = orig;
+
+            if (!keepPhysicalNames.has(orig.name)) {
+              const std = new THREE.MeshStandardMaterial({
+                color: src.color ? src.color.clone() : new THREE.Color(0xffffff),
+                roughness: src.roughness ?? 0.5,
+                metalness: src.metalness ?? 0.0,
+                map: src.map ?? null,
+                normalMap: src.normalMap ?? null,
+                normalScale: src.normalScale ? src.normalScale.clone() : new THREE.Vector2(1, 1),
+                roughnessMap: src.roughnessMap ?? null,
+                metalnessMap: src.metalnessMap ?? null,
+                aoMap: src.aoMap ?? null,
+                aoMapIntensity: src.aoMapIntensity ?? 1,
+                emissive: src.emissive ? src.emissive.clone() : new THREE.Color(0x000000),
+                emissiveMap: src.emissiveMap ?? null,
+                emissiveIntensity: src.emissiveIntensity ?? 1,
+                opacity: src.opacity ?? 1,
+                envMapIntensity: 0.85,
+              });
+              std.name = orig.name;
+              orig.dispose();
+              targetMat = std;
+            } else if ('envMapIntensity' in targetMat) {
+              const phys = targetMat as THREE.MeshPhysicalMaterial;
+              phys.envMapIntensity = 0.85;
+              if (isCabinGlass) {
+                phys.color.setHex(0x080c12);
+                phys.opacity = 0.9;
+                phys.roughness = 0.08;
+                phys.metalness = 0.14;
+                phys.clearcoat = 1.0;
+                phys.clearcoatRoughness = 0.05;
+              }
             }
+
+            if (isGlass) {
+              targetMat.transparent = true;
+              targetMat.depthWrite = false;
+              targetMat.side = THREE.FrontSide;
+            } else if (isCutout) {
+              targetMat.transparent = false;
+              targetMat.alphaTest = 0.35;
+              targetMat.depthWrite = true;
+              targetMat.side = THREE.FrontSide;
+            } else {
+              targetMat.transparent = false;
+              targetMat.depthWrite = true;
+              targetMat.side = THREE.FrontSide;
+            }
+            targetMat.needsUpdate = true;
+
+            const texSrc = targetMat as THREE.MeshStandardMaterial;
+            [
+              texSrc.map,
+              texSrc.normalMap,
+              texSrc.roughnessMap,
+              texSrc.metalnessMap,
+              texSrc.aoMap,
+              texSrc.emissiveMap,
+            ].forEach((tx) => {
+              if (tx && !uploadedTex.has(tx)) {
+                uploadedTex.add(tx);
+                tx.anisotropy = maxCarAniso;
+                renderer.initTexture(tx);
+              }
+            });
+
+            simplifiedMatCache.set(orig, targetMat);
+            return targetMat;
           });
+          obj.material = Array.isArray(obj.material) ? nextMats : nextMats[0];
         }
       });
 
@@ -616,8 +785,12 @@ export function createStarshipRocket(
     })
     .catch(() => {});
 
+  const trainRoot = new THREE.Group();
+  root.add(trainRoot);
+
   const trainGroup = new THREE.Group();
-  root.add(trainGroup);
+  trainGroup.position.y = 0.134;
+  trainRoot.add(trainGroup);
 
   const coachProfile = new THREE.Shape();
   coachProfile.moveTo(-0.275, -0.02);
@@ -866,8 +1039,12 @@ export function createStarshipRocket(
     pantographGroup
   );
 
+  const aircraftRoot = new THREE.Group();
+  root.add(aircraftRoot);
+
   const aircraftGroup = new THREE.Group();
-  root.add(aircraftGroup);
+  aircraftGroup.position.y = 0.34;
+  aircraftRoot.add(aircraftGroup);
 
   const jetFuselageProfile: THREE.Vector2[] = [];
   for (let i = 0; i <= 28; i++) {
@@ -977,7 +1154,6 @@ export function createStarshipRocket(
   leftHStab.scale.x = -1;
   leftHStab.position.set(-0.08, 0.06, 0.78);
 
-  const turbofanNacelles: THREE.Group[] = [];
   const turbofanRotors: THREE.Group[] = [];
   [-0.54, 0.54].forEach((ex) => {
     const nacelleGroup = new THREE.Group();
@@ -1027,9 +1203,38 @@ export function createStarshipRocket(
     exhaustCone.position.z = 0.35;
 
     nacelleGroup.add(cowling, intakeLip, rotorGroup, exhaustCone);
-    turbofanNacelles.push(nacelleGroup);
     aircraftGroup.add(nacelleGroup);
   });
+
+  const landingGearGroup = new THREE.Group();
+  const gearStrutGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.2, 8);
+  const gearTireGeo = new THREE.CylinderGeometry(0.044, 0.044, 0.032, 12);
+  gearTireGeo.rotateZ(Math.PI / 2);
+
+  const makeGearPod = (gx: number, gz: number, twin = false) => {
+    const pod = new THREE.Group();
+    pod.position.set(gx, -0.19, gz);
+    const strut = new THREE.Mesh(gearStrutGeo, brushedSteelMat);
+    strut.position.y = -0.02;
+    pod.add(strut);
+    if (twin) {
+      [-0.024, 0.024].forEach((tx) => {
+        const wheel = new THREE.Mesh(gearTireGeo, tireRubberMat);
+        wheel.position.set(tx, -0.106, 0);
+        pod.add(wheel);
+      });
+    } else {
+      const wheel = new THREE.Mesh(gearTireGeo, tireRubberMat);
+      wheel.position.set(0, -0.106, 0);
+      pod.add(wheel);
+    }
+    return pod;
+  };
+  landingGearGroup.add(
+    makeGearPod(0, -0.64, false),
+    makeGearPod(-0.32, 0.14, true),
+    makeGearPod(0.32, 0.14, true)
+  );
 
   aircraftGroup.add(
     jetFuselageMesh,
@@ -1039,11 +1244,15 @@ export function createStarshipRocket(
     leftWingPivot,
     tailFinMesh,
     rightHStab,
-    leftHStab
+    leftHStab,
+    landingGearGroup
   );
 
+  const rocketRoot = new THREE.Group();
+  root.add(rocketRoot);
+
   const rocketGroup = new THREE.Group();
-  root.add(rocketGroup);
+  rocketRoot.add(rocketGroup);
 
   const hullProfile: THREE.Vector2[] = [];
   const profileSteps = 32;
@@ -1134,11 +1343,6 @@ export function createStarshipRocket(
     bevelSegments: 2,
   });
   aftFinGeo.rotateX(-Math.PI / 2);
-
-  const wingtipLocalPositions: [number, number, number][] = [
-    [-0.6, 0, 0.68],
-    [0.6, 0, 0.68],
-  ];
 
   const mainFinsGroup = new THREE.Group();
   [0, Math.PI, Math.PI * 0.42, -Math.PI * 0.42].forEach((angle, idx) => {
@@ -1339,9 +1543,14 @@ export function createStarshipRocket(
   const rollQuat = new THREE.Quaternion();
   const pitchSteerQuat = new THREE.Quaternion();
   const upVec = new THREE.Vector3(0, 1, 0);
+  const dynamicUp = new THREE.Vector3(0, 1, 0);
   const zAxis = new THREE.Vector3(0, 0, 1);
   const xAxis = new THREE.Vector3(1, 0, 0);
   const lookAheadPt = new THREE.Vector3();
+  const tmpPos = new THREE.Vector3();
+  const tmpTan = new THREE.Vector3();
+  const tmpNextTan = new THREE.Vector3();
+  const activePos = new THREE.Vector3();
   const sparkDummy = new THREE.Object3D();
   const sparkColor = new THREE.Color();
   const cOrange = new THREE.Color(PALETTE_NUM.amber);
@@ -1350,124 +1559,103 @@ export function createStarshipRocket(
   const rightWingWorld = new THREE.Vector3();
   const exhaustWorld = new THREE.Vector3();
 
-  let smoothedRoll = 0;
-  let smoothedPitch = 0;
-  let wheelSpinAngle = 0;
+  let smoothedCarSteer = 0;
+  let smoothedAirRoll = 0;
+  let smoothedAirPitch = 0;
+  let smoothedRocketRoll = 0;
+  let smoothedRocketPitch = 0;
+  let carWheelAngle = 0;
+  let trainWheelAngle = 0;
   let carBoostLevel = 0;
-  let isSpaceRocketMode = false;
-  let rocketMorph = 0;
+  let airTrailsPrimed = false;
+  let rocketTrailsPrimed = false;
+
+  const easeEndCaps = (u: number, cap = 0.08): number => {
+    if (u <= 0) return 0;
+    if (u >= 1) return 1;
+    if (u < cap) {
+      const f = u / cap;
+      return cap * (1 - Math.cos(f * Math.PI * 0.5));
+    }
+    if (u > 1 - cap) {
+      const f = (u - (1 - cap)) / cap;
+      return 1 - cap + cap * Math.sin(f * Math.PI * 0.5);
+    }
+    return u;
+  };
 
   return {
     root,
+    carRoot,
+    trainRoot,
+    aircraftRoot,
+    rocketRoot,
     trailLines,
+    ready,
     update(
       dt,
       elapsed,
       progressT,
-      position,
-      tangent,
-      nextTangent,
+      curves,
       velocity,
       boost,
       pointerX,
       pointerY,
-      scaleMultiplier,
-      nearestPlanetDist = 999
+      scaleMultiplier
     ) {
-      const isGroundOrRail = progressT < 5.5;
-      root.position.copy(position);
-      if (!isGroundOrRail) {
-        root.position.y += Math.sin(elapsed * 2.2) * 0.028;
-      }
-      root.scale.setScalar(scaleMultiplier);
+      const damp = 1 - Math.exp(-dt * 9.0);
+      const speedAbs = Math.abs(velocity);
 
-      lookAheadPt.copy(position).add(tangent);
-      lookMat.lookAt(position, lookAheadPt, upVec);
-      targetQuat.setFromRotationMatrix(lookMat);
+      const showCar = progressT <= 2.75;
+      carRoot.visible = showCar;
+      if (showCar) {
+        const rawCarU = THREE.MathUtils.clamp(progressT / 1.0, 0, 1);
+        const carU =
+          rawCarU < 0.84
+            ? rawCarU
+            : 0.84 + 0.16 * Math.sin(((rawCarU - 0.84) / 0.16) * Math.PI * 0.5);
+        curves.carDriveCurve.getPointAt(carU, tmpPos);
+        curves.carDriveCurve.getTangentAt(carU, tmpTan);
+        curves.carDriveCurve.getTangentAt(Math.min(1, carU + 0.04), tmpNextTan);
 
-      const curveTurnX = (nextTangent.x - tangent.x) * 5.8;
-      const bankFactor = isGroundOrRail ? 0.06 : 0.4;
-      const pitchFactor = isGroundOrRail ? 0.02 : 0.18;
-      const targetRoll = THREE.MathUtils.clamp(-curveTurnX - pointerX * bankFactor, -0.55, 0.55);
-      const targetPitch = THREE.MathUtils.clamp(pointerY * pitchFactor, -0.22, 0.22);
+        carRoot.position.copy(tmpPos);
+        carRoot.scale.setScalar(scaleMultiplier);
 
-      const damp = 1 - Math.exp(-dt * 8.5);
-      smoothedRoll += (targetRoll - smoothedRoll) * damp;
-      smoothedPitch += (targetPitch - smoothedPitch) * damp;
+        tmpTan.y = 0;
+        if (tmpTan.length() < 0.0001) tmpTan.set(0, 0, -1);
+        else tmpTan.normalize();
+        lookAheadPt.copy(tmpPos).add(tmpTan);
+        lookMat.lookAt(tmpPos, lookAheadPt, upVec);
+        targetQuat.setFromRotationMatrix(lookMat);
+        carRoot.quaternion.copy(targetQuat);
 
-      rollQuat.setFromAxisAngle(zAxis, smoothedRoll);
-      pitchSteerQuat.setFromAxisAngle(xAxis, smoothedPitch);
-      targetQuat.multiply(pitchSteerQuat).multiply(rollQuat);
+        const carParked = rawCarU >= 0.992;
+        const steerTarget = carParked
+          ? 0
+          : THREE.MathUtils.clamp((tmpNextTan.x - tmpTan.x) * 3.8 - pointerX * 0.18, -0.42, 0.42);
+        smoothedCarSteer += (steerTarget - smoothedCarSteer) * damp;
+        if (!carParked) {
+          carWheelAngle += dt * (4.2 + speedAbs * 14 + boost * 10);
+        }
 
-      root.quaternion.slerp(targetQuat, 1 - Math.exp(-dt * 11));
-
-      if (!isSpaceRocketMode && (position.y >= 17.6 || nearestPlanetDist <= 22.0)) {
-        isSpaceRocketMode = true;
-      } else if (isSpaceRocketMode && position.y <= 15.4 && nearestPlanetDist >= 28.0) {
-        isSpaceRocketMode = false;
-      }
-      if (progressT < 5.1) {
-        isSpaceRocketMode = false;
-      }
-
-      rocketMorph = THREE.MathUtils.damp(rocketMorph, isSpaceRocketMode ? 1 : 0, 3.8, dt);
-      const morphEase = rocketMorph * rocketMorph * (3 - 2 * rocketMorph);
-
-      const carWeight = 1 - THREE.MathUtils.smoothstep(progressT, 1.35, 1.95);
-      const trainWeight =
-        THREE.MathUtils.smoothstep(progressT, 1.35, 1.95) *
-        (1 - THREE.MathUtils.smoothstep(progressT, 5.15, 5.85));
-      const flightWeight = THREE.MathUtils.smoothstep(progressT, 5.15, 5.85);
-      const aircraftWeight = flightWeight * (1 - morphEase * 0.94);
-      const rocketWeight = flightWeight * morphEase;
-
-      carGroup.visible = carWeight > 0.01;
-      carGroup.scale.setScalar(Math.max(0.001, carWeight));
-
-      trainGroup.visible = trainWeight > 0.01;
-      trainGroup.scale.setScalar(Math.max(0.001, trainWeight));
-
-      aircraftGroup.visible = aircraftWeight > 0.03;
-      aircraftGroup.scale.setScalar(Math.max(0.001, flightWeight * (1 - morphEase * 0.48)));
-
-      rocketGroup.visible = rocketWeight > 0.015;
-      rocketGroup.scale.setScalar(Math.max(0.001, flightWeight * (0.45 + 0.55 * morphEase)));
-
-      rightWingPivot.rotation.y = morphEase * 0.85;
-      leftWingPivot.rotation.y = -morphEase * 0.85;
-      const wingSpanFactor = Math.max(0.08, 1 - morphEase * 0.86);
-      rightWingPivot.scale.set(wingSpanFactor, 1 - morphEase * 0.5, 1);
-      leftWingPivot.scale.set(wingSpanFactor, 1 - morphEase * 0.5, 1);
-      turbofanNacelles.forEach((nac) => {
-        nac.scale.setScalar(Math.max(0.02, 1 - morphEase * 0.9));
-      });
-
-      const canardDeploy = Math.max(0.1, morphEase);
-      leftCanardPivot.scale.setScalar(canardDeploy);
-      rightCanardPivot.scale.setScalar(canardDeploy);
-
-      wheelSpinAngle += dt * (4.5 + Math.abs(velocity) * 14 + boost * 10);
-      if (carGroup.visible) {
         if (porscheContainer.visible) {
           porscheSpinPivots.forEach((sp) => {
-            sp.rotation.x = wheelSpinAngle;
+            sp.rotation.x = carWheelAngle;
           });
           porscheSteerPivots.forEach((st) => {
-            st.rotation.y = -smoothedRoll * 0.55;
+            st.rotation.y = smoothedCarSteer * 0.72;
           });
         } else {
           carWheels.forEach((w, idx) => {
-            w.rotation.x = -wheelSpinAngle;
-            if (idx < 2) {
-              w.rotation.y = -smoothedRoll * 0.65;
-            }
+            w.rotation.x = -carWheelAngle;
+            if (idx < 2) w.rotation.y = smoothedCarSteer * 0.72;
           });
         }
-        carHeadSpot.intensity = carWeight * 2.4;
 
-        const rawBoostSignal = Math.max(boost, Math.max(0, Math.abs(velocity) - 0.35));
+        carHeadSpot.intensity = carParked ? 1.0 : 2.35;
+        const rawBoost = carParked ? 0 : Math.max(boost, Math.max(0, speedAbs - 0.35));
         const targetBoost =
-          rawBoostSignal > 0.05 ? THREE.MathUtils.clamp((rawBoostSignal - 0.05) / 0.45, 0.3, 1) : 0;
+          rawBoost > 0.05 ? THREE.MathUtils.clamp((rawBoost - 0.05) / 0.45, 0.3, 1) : 0;
         carBoostLevel = THREE.MathUtils.damp(carBoostLevel, targetBoost, 10, dt);
         const boostActive = carBoostLevel > 0.015;
         boosterEmberMat.emissiveIntensity = boostActive ? 1.2 + carBoostLevel * 1.9 : 0;
@@ -1476,15 +1664,19 @@ export function createStarshipRocket(
           flame.visible = boostActive;
           if (boostActive) {
             const flicker = 0.86 + Math.sin(elapsed * 48 + idx * 2.1) * 0.14;
-            flame.scale.set(0.65 + carBoostLevel * 0.45, 0.65 + carBoostLevel * 0.45, (0.38 + carBoostLevel * 0.95) * flicker);
-            (flame.material as THREE.MeshBasicMaterial).opacity = (0.36 + carBoostLevel * 0.48) * carWeight;
+            flame.scale.set(
+              0.65 + carBoostLevel * 0.45,
+              0.65 + carBoostLevel * 0.45,
+              (0.38 + carBoostLevel * 0.95) * flicker
+            );
+            (flame.material as THREE.MeshBasicMaterial).opacity = 0.36 + carBoostLevel * 0.48;
           }
         });
         carBoosterHalos.forEach((halo) => {
           halo.visible = boostActive;
           if (boostActive) {
             halo.scale.setScalar(0.5 + carBoostLevel * 0.72);
-            (halo.material as THREE.MeshBasicMaterial).opacity = carBoostLevel * 0.52 * carWeight;
+            (halo.material as THREE.MeshBasicMaterial).opacity = carBoostLevel * 0.52;
           }
         });
 
@@ -1513,99 +1705,270 @@ export function createStarshipRocket(
         carBoosterSparks.visible = false;
       }
 
-      if (trainGroup.visible) {
-        trainWheels.forEach((axle) => {
-          axle.rotation.x = -wheelSpinAngle * 1.4;
-        });
-      }
+      const showTrain = progressT >= 0.35 && progressT <= 6.45;
+      trainRoot.visible = showTrain;
+      if (showTrain) {
+        const rawTrainU = THREE.MathUtils.clamp((progressT - 1.25) / 3.8, 0, 1);
+        const trainU = easeEndCaps(rawTrainU, 0.045);
+        curves.trainDriveCurve.getPointAt(trainU, tmpPos);
+        curves.trainDriveCurve.getTangentAt(trainU, tmpTan);
+        curves.trainDriveCurve.getTangentAt(Math.min(1, trainU + 0.03), tmpNextTan);
 
-      if (aircraftGroup.visible) {
-        turbofanRotors.forEach((rotor) => {
-          rotor.rotation.z = elapsed * (22 + boost * 18);
-        });
-      }
+        trainRoot.position.copy(tmpPos);
+        const railSafeScale = THREE.MathUtils.clamp(scaleMultiplier, 0.96, 1.02);
+        trainRoot.scale.setScalar(railSafeScale);
 
-      if (rocketGroup.visible) {
-        leftCanardPivot.rotation.x = smoothedPitch * 0.8 - smoothedRoll * 0.42;
-        rightCanardPivot.rotation.x = smoothedPitch * 0.8 + smoothedRoll * 0.42;
-        gimbalGroup.rotation.y = -smoothedRoll * 0.3;
-        gimbalGroup.rotation.x = -smoothedPitch * 0.3;
+        lookAheadPt.copy(tmpPos).add(tmpTan);
+        lookMat.lookAt(tmpPos, lookAheadPt, upVec);
+        targetQuat.setFromRotationMatrix(lookMat);
+        const cantRoll = THREE.MathUtils.clamp(-(tmpNextTan.x - tmpTan.x) * 0.35, -0.055, 0.055);
+        rollQuat.setFromAxisAngle(zAxis, cantRoll);
+        targetQuat.multiply(rollQuat);
+        trainRoot.quaternion.copy(targetQuat);
 
-        const forwardSpeed = Math.max(0, velocity);
-        const ramp = THREE.MathUtils.clamp((morphEase - 0.12) / 0.88, 0, 1);
-        const throttle = Math.min(2.0, 0.58 + forwardSpeed * 0.7 + boost * 1.0) * ramp;
-
-        plumeUniforms.uTime.value = elapsed;
-        plumeUniforms.uThrottle.value = throttle;
-        plumeUniforms.uBoost.value = Math.min(1, boost + forwardSpeed * 0.22) * ramp;
-
-        const plumeLen = (0.32 + throttle * 0.72) * Math.max(0.05, ramp);
-        const plumeRad = (0.55 + Math.sin(elapsed * 40) * 0.035 + boost * 0.18) * Math.max(0.2, ramp);
-        plumeOuterMesh.scale.set(plumeRad, plumeRad, plumeLen);
-        plumeInnerMesh.scale.set(plumeRad * 0.84, plumeRad * 0.84, plumeLen * 0.74);
-
-        exhaustHalo.scale.setScalar((0.35 + throttle * 0.42) * ramp);
-        engineLight.intensity = (2.0 + throttle * 1.4 + boost * 2.2) * rocketWeight;
-        engineLight.color.copy(boost > 0.35 ? cCyan : cOrange);
-
-        for (let i = 0; i < SPARK_COUNT; i++) {
-          const life = (elapsed * (2.0 + hashSeed(i) * 1.4) + i / SPARK_COUNT) % 1;
-          const spread = life * (0.16 + boost * 0.12);
-          const angle = hashSeed(i + 19) * Math.PI * 2 + elapsed * 3.2;
-          sparkDummy.position.set(
-            Math.cos(angle) * spread,
-            Math.sin(angle) * spread,
-            1.0 + life * (1.25 + throttle * 0.75)
-          );
-          const sScale = Math.max(0.001, (1 - life) * (0.6 + throttle * 0.3) * ramp);
-          sparkDummy.scale.set(sScale * 0.55, sScale * 0.55, sScale * 1.6);
-          sparkDummy.updateMatrix();
-          sparksInstanced.setMatrixAt(i, sparkDummy.matrix);
-          sparkColor.copy(life < 0.32 || boost > 0.3 ? cCyan : cOrange).multiplyScalar(0.95 * (1 - life));
-          sparksInstanced.setColorAt(i, sparkColor);
+        const trainMoving = rawTrainU > 0.003 && rawTrainU < 0.997;
+        if (trainMoving) {
+          trainWheelAngle += dt * (6.0 + speedAbs * 18 + boost * 12);
+          trainWheels.forEach((axle) => {
+            axle.rotation.x = -trainWheelAngle;
+          });
         }
-        sparksInstanced.instanceMatrix.needsUpdate = true;
-        if (sparksInstanced.instanceColor) sparksInstanced.instanceColor.needsUpdate = true;
+      }
+
+      const showAircraft = progressT >= 4.45 && progressT <= 9.25;
+      aircraftRoot.visible = showAircraft;
+      if (showAircraft) {
+        const rawAirU = THREE.MathUtils.clamp((progressT - 5.2) / 2.85, 0, 1);
+        const airU = easeEndCaps(rawAirU, 0.04);
+        curves.aircraftCurve.getPointAt(airU, tmpPos);
+        curves.aircraftCurve.getTangentAt(airU, tmpTan);
+        curves.aircraftCurve.getTangentAt(Math.min(1, airU + 0.035), tmpNextTan);
+
+        const airborneFactor =
+          THREE.MathUtils.smoothstep(airU, 0.16, 0.25) *
+          (1 - THREE.MathUtils.smoothstep(airU, 0.78, 0.89));
+
+        aircraftRoot.position.copy(tmpPos);
+        if (airborneFactor > 0.01) {
+          aircraftRoot.position.y += Math.sin(elapsed * 2.1) * 0.045 * airborneFactor;
+        }
+        aircraftRoot.scale.setScalar(scaleMultiplier);
+
+        const gearExtend =
+          1 -
+          THREE.MathUtils.smoothstep(airU, 0.2, 0.29) +
+          THREE.MathUtils.smoothstep(airU, 0.73, 0.84);
+        const clampedGear = THREE.MathUtils.clamp(gearExtend, 0, 1);
+        landingGearGroup.visible = clampedGear > 0.04;
+        landingGearGroup.scale.set(1, Math.max(0.01, clampedGear), 1);
+        landingGearGroup.position.y = (1 - clampedGear) * 0.12;
+
+        lookAheadPt.copy(tmpPos).add(tmpTan);
+        lookMat.lookAt(tmpPos, lookAheadPt, upVec);
+        targetQuat.setFromRotationMatrix(lookMat);
+
+        const takeoffPitch =
+          THREE.MathUtils.smoothstep(airU, 0.12, 0.19) *
+          (1 - THREE.MathUtils.smoothstep(airU, 0.21, 0.3)) *
+          0.14;
+        const flarePitch =
+          THREE.MathUtils.smoothstep(airU, 0.82, 0.87) *
+          (1 - THREE.MathUtils.smoothstep(airU, 0.88, 0.94)) *
+          0.11;
+        const targetBank =
+          airborneFactor *
+          THREE.MathUtils.clamp(-(tmpNextTan.x - tmpTan.x) * 4.2 - pointerX * 0.32, -0.52, 0.52);
+        const targetAirPitch = takeoffPitch + flarePitch + pointerY * 0.12 * airborneFactor;
+
+        smoothedAirRoll += (targetBank - smoothedAirRoll) * damp;
+        smoothedAirPitch += (targetAirPitch - smoothedAirPitch) * damp;
+
+        pitchSteerQuat.setFromAxisAngle(xAxis, smoothedAirPitch);
+        rollQuat.setFromAxisAngle(zAxis, smoothedAirRoll);
+        targetQuat.multiply(pitchSteerQuat).multiply(rollQuat);
+        aircraftRoot.quaternion.copy(targetQuat);
+
+        const rotorSpeed = rawAirU > 0.005 && rawAirU < 0.995 ? 24 + boost * 18 : 6;
+        turbofanRotors.forEach((rotor) => {
+          rotor.rotation.z = elapsed * rotorSpeed;
+        });
+
+        const showContrails = airborneFactor > 0.2;
+        leftTrailLine.visible = showContrails;
+        rightTrailLine.visible = showContrails;
+        if (showContrails) {
+          aircraftRoot.updateMatrixWorld(true);
+          leftWingWorld.set(-1.38, 0.34, 0.36);
+          aircraftRoot.localToWorld(leftWingWorld);
+          rightWingWorld.set(1.38, 0.34, 0.36);
+          aircraftRoot.localToWorld(rightWingWorld);
+
+          if (!airTrailsPrimed) {
+            for (let i = 0; i < TRAIL_LEN; i++) {
+              leftHistory[i].copy(leftWingWorld);
+              rightHistory[i].copy(rightWingWorld);
+            }
+            airTrailsPrimed = true;
+          } else {
+            for (let i = TRAIL_LEN - 1; i > 0; i--) {
+              leftHistory[i].lerp(leftHistory[i - 1], 0.58);
+              rightHistory[i].lerp(rightHistory[i - 1], 0.58);
+            }
+            leftHistory[0].copy(leftWingWorld);
+            rightHistory[0].copy(rightWingWorld);
+          }
+
+          for (let i = 0; i < TRAIL_LEN; i++) {
+            leftTrailArr[i * 3] = leftHistory[i].x;
+            leftTrailArr[i * 3 + 1] = leftHistory[i].y;
+            leftTrailArr[i * 3 + 2] = leftHistory[i].z;
+            rightTrailArr[i * 3] = rightHistory[i].x;
+            rightTrailArr[i * 3 + 1] = rightHistory[i].y;
+            rightTrailArr[i * 3 + 2] = rightHistory[i].z;
+          }
+          leftTrailLine.geometry.attributes.position.needsUpdate = true;
+          rightTrailLine.geometry.attributes.position.needsUpdate = true;
+        } else {
+          airTrailsPrimed = false;
+        }
+      } else {
+        leftTrailLine.visible = false;
+        rightTrailLine.visible = false;
+        airTrailsPrimed = false;
+      }
+
+      const showRocket = progressT >= 7.35;
+      rocketRoot.visible = showRocket;
+      const rocketLaunchProgress = THREE.MathUtils.clamp((progressT - 8.2) / 0.8, 0, 1);
+      if (showRocket) {
+        const rawRockU = THREE.MathUtils.clamp((progressT - 8.2) / 3.8, 0, 1);
+        curves.rocketCurve.getPointAt(rawRockU, tmpPos);
+        curves.rocketCurve.getTangentAt(rawRockU, tmpTan);
+        curves.rocketCurve.getTangentAt(Math.min(1, rawRockU + 0.03), tmpNextTan);
+
+        rocketRoot.position.copy(tmpPos);
+        if (rawRockU > 0.02) {
+          rocketRoot.position.y += Math.sin(elapsed * 2.0) * 0.024;
+        }
+        rocketRoot.scale.setScalar(scaleMultiplier);
+
+        const verticalness = THREE.MathUtils.smoothstep(tmpTan.y, 0.45, 0.98);
+        dynamicUp.set(0, 1 - verticalness * 0.72, verticalness).normalize();
+        lookAheadPt.copy(tmpPos).add(tmpTan);
+        lookMat.lookAt(tmpPos, lookAheadPt, dynamicUp);
+        targetQuat.setFromRotationMatrix(lookMat);
+
+        const flightRollTarget =
+          rawRockU > 0.04
+            ? THREE.MathUtils.clamp(-(tmpNextTan.x - tmpTan.x) * 3.5 - pointerX * 0.25, -0.45, 0.45)
+            : 0;
+        const flightPitchTarget = rawRockU > 0.04 ? THREE.MathUtils.clamp(pointerY * 0.14, -0.18, 0.18) : 0;
+        smoothedRocketRoll += (flightRollTarget - smoothedRocketRoll) * damp;
+        smoothedRocketPitch += (flightPitchTarget - smoothedRocketPitch) * damp;
+
+        pitchSteerQuat.setFromAxisAngle(xAxis, smoothedRocketPitch);
+        rollQuat.setFromAxisAngle(zAxis, smoothedRocketRoll);
+        targetQuat.multiply(pitchSteerQuat).multiply(rollQuat);
+        rocketRoot.quaternion.copy(targetQuat);
+
+        const ignition = THREE.MathUtils.smoothstep(progressT, 8.02, 8.32);
+        const forwardSpeed = Math.max(0, velocity);
+        const throttle = Math.min(2.1, (0.68 + forwardSpeed * 0.7 + boost * 1.0) * ignition);
+
+        leftCanardPivot.rotation.x = smoothedRocketPitch * 0.8 - smoothedRocketRoll * 0.42;
+        rightCanardPivot.rotation.x = smoothedRocketPitch * 0.8 + smoothedRocketRoll * 0.42;
+        gimbalGroup.rotation.y = -smoothedRocketRoll * 0.3;
+        gimbalGroup.rotation.x = -smoothedRocketPitch * 0.3;
+
+        const plumeActive = ignition > 0.02;
+        plumeOuterMesh.visible = plumeActive;
+        plumeInnerMesh.visible = plumeActive;
+        exhaustHalo.visible = plumeActive;
+        sparksInstanced.visible = plumeActive;
+
+        if (plumeActive) {
+          plumeUniforms.uTime.value = elapsed;
+          plumeUniforms.uThrottle.value = throttle;
+          plumeUniforms.uBoost.value = Math.min(1, boost + forwardSpeed * 0.22) * ignition;
+
+          const plumeLen = (0.34 + throttle * 0.78) * Math.max(0.08, ignition);
+          const plumeRad =
+            (0.55 + Math.sin(elapsed * 40) * 0.035 + boost * 0.18) * Math.max(0.25, ignition);
+          plumeOuterMesh.scale.set(plumeRad, plumeRad, plumeLen);
+          plumeInnerMesh.scale.set(plumeRad * 0.84, plumeRad * 0.84, plumeLen * 0.74);
+
+          exhaustHalo.scale.setScalar((0.36 + throttle * 0.46) * ignition);
+          engineLight.intensity = (2.2 + throttle * 1.6 + boost * 2.2) * ignition;
+          engineLight.color.copy(boost > 0.35 ? cCyan : cOrange);
+
+          for (let i = 0; i < SPARK_COUNT; i++) {
+            const life = (elapsed * (2.0 + hashSeed(i) * 1.4) + i / SPARK_COUNT) % 1;
+            const spread = life * (0.16 + boost * 0.12);
+            const angle = hashSeed(i + 19) * Math.PI * 2 + elapsed * 3.2;
+            sparkDummy.position.set(
+              Math.cos(angle) * spread,
+              Math.sin(angle) * spread,
+              1.0 + life * (1.25 + throttle * 0.75)
+            );
+            const sScale = Math.max(0.001, (1 - life) * (0.6 + throttle * 0.3) * ignition);
+            sparkDummy.scale.set(sScale * 0.55, sScale * 0.55, sScale * 1.6);
+            sparkDummy.updateMatrix();
+            sparksInstanced.setMatrixAt(i, sparkDummy.matrix);
+            sparkColor
+              .copy(life < 0.32 || boost > 0.3 ? cCyan : cOrange)
+              .multiplyScalar(0.95 * (1 - life));
+            sparksInstanced.setColorAt(i, sparkColor);
+          }
+          sparksInstanced.instanceMatrix.needsUpdate = true;
+          if (sparksInstanced.instanceColor) sparksInstanced.instanceColor.needsUpdate = true;
+        } else {
+          engineLight.intensity = 0;
+        }
+
+        const showRocketTrail = rawRockU > 0.015;
+        centerTrailLine.visible = showRocketTrail;
+        if (showRocketTrail) {
+          rocketRoot.updateMatrixWorld(true);
+          exhaustWorld.set(0, 0, 0.95);
+          rocketRoot.localToWorld(exhaustWorld);
+          if (!rocketTrailsPrimed) {
+            for (let i = 0; i < TRAIL_LEN; i++) {
+              centerHistory[i].copy(exhaustWorld);
+            }
+            rocketTrailsPrimed = true;
+          } else {
+            for (let i = TRAIL_LEN - 1; i > 0; i--) {
+              centerHistory[i].lerp(centerHistory[i - 1], 0.58);
+            }
+            centerHistory[0].copy(exhaustWorld);
+          }
+          for (let i = 0; i < TRAIL_LEN; i++) {
+            centerTrailArr[i * 3] = centerHistory[i].x;
+            centerTrailArr[i * 3 + 1] = centerHistory[i].y;
+            centerTrailArr[i * 3 + 2] = centerHistory[i].z;
+          }
+          centerTrailLine.geometry.attributes.position.needsUpdate = true;
+        } else {
+          rocketTrailsPrimed = false;
+        }
       } else {
         engineLight.intensity = 0;
+        centerTrailLine.visible = false;
+        rocketTrailsPrimed = false;
       }
 
-      exhaustWorld.set(0, 0, 0.95);
-      root.localToWorld(exhaustWorld);
-      leftWingWorld.set(...wingtipLocalPositions[0]);
-      root.localToWorld(leftWingWorld);
-      rightWingWorld.set(...wingtipLocalPositions[1]);
-      root.localToWorld(rightWingWorld);
-
-      for (let i = TRAIL_LEN - 1; i > 0; i--) {
-        centerHistory[i].lerp(centerHistory[i - 1], 0.58);
-        leftHistory[i].lerp(leftHistory[i - 1], 0.58);
-        rightHistory[i].lerp(rightHistory[i - 1], 0.58);
+      if (progressT < 1.2) {
+        activePos.copy(carRoot.position);
+      } else if (progressT < 5.15) {
+        activePos.copy(trainRoot.position);
+      } else if (progressT < 8.15) {
+        activePos.copy(aircraftRoot.position);
+      } else {
+        activePos.copy(rocketRoot.position);
       }
-      centerHistory[0].copy(exhaustWorld);
-      leftHistory[0].copy(leftWingWorld);
-      rightHistory[0].copy(rightWingWorld);
 
-      for (let i = 0; i < TRAIL_LEN; i++) {
-        centerTrailArr[i * 3] = centerHistory[i].x;
-        centerTrailArr[i * 3 + 1] = centerHistory[i].y;
-        centerTrailArr[i * 3 + 2] = centerHistory[i].z;
-
-        leftTrailArr[i * 3] = leftHistory[i].x;
-        leftTrailArr[i * 3 + 1] = leftHistory[i].y;
-        leftTrailArr[i * 3 + 2] = leftHistory[i].z;
-
-        rightTrailArr[i * 3] = rightHistory[i].x;
-        rightTrailArr[i * 3 + 1] = rightHistory[i].y;
-        rightTrailArr[i * 3 + 2] = rightHistory[i].z;
-      }
-      centerTrailLine.visible = rocketWeight > 0.1;
-      leftTrailLine.visible = aircraftWeight > 0.15;
-      rightTrailLine.visible = aircraftWeight > 0.15;
-      centerTrailLine.geometry.attributes.position.needsUpdate = true;
-      leftTrailLine.geometry.attributes.position.needsUpdate = true;
-      rightTrailLine.geometry.attributes.position.needsUpdate = true;
-      return morphEase;
+      const spaceFactor = THREE.MathUtils.smoothstep(progressT, 8.25, 9.05);
+      return { activePos, rocketLaunchProgress, spaceFactor };
     },
     dispose() {
       carDisposed = true;

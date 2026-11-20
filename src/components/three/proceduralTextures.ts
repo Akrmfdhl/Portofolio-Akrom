@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { sampleRouteCenterX } from './routeMath';
 
 export function hashSeed(n: number): number {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453123;
@@ -74,29 +75,40 @@ function worleyBillow2d(x: number, y: number, seed = 7): number {
 }
 
 export function sampleMountainElevation(x: number, z: number): number {
-  const absX = Math.abs(x);
-  const corridorCarve = THREE.MathUtils.smoothstep(absX, 2.5, 8.2);
-  const slopeRamp = THREE.MathUtils.smoothstep(absX, 3.2, 24.0);
-  const canyonDrop =
-    z < -42
-      ? THREE.MathUtils.smoothstep(-z, 42, 54) * (1 - THREE.MathUtils.smoothstep(-z, 128, 148)) * -2.8
-      : 0;
+  const cx = sampleRouteCenterX(z);
+  const dx = Math.abs(x - cx);
+
+  const stationMask =
+    THREE.MathUtils.smoothstep(-z, 43, 47) * (1 - THREE.MathUtils.smoothstep(-z, 59, 64));
+  const airportMask =
+    THREE.MathUtils.smoothstep(-z, 118, 124) * (1 - THREE.MathUtils.smoothstep(-z, 166, 173));
+  const canyonMask =
+    THREE.MathUtils.smoothstep(-z, 62, 69) * (1 - THREE.MathUtils.smoothstep(-z, 116, 123));
+
+  const flatHalfW = Math.max(2.35, stationMask * 8.4, airportMask * 15.2);
+  const absRel = airportMask > 0.1 ? Math.abs(x) : stationMask > 0.1 ? Math.abs(x - 0.3) : dx;
+
+  const corridorCarve = THREE.MathUtils.smoothstep(absRel, flatHalfW, flatHalfW + 6.2);
+  const slopeRamp = THREE.MathUtils.smoothstep(absRel, flatHalfW + 1.4, flatHalfW + 22.0);
 
   const ridge = ridgedNoise2d(x * 0.048, z * 0.036, 5, 17);
   const detail = fbm2d(x * 0.14, z * 0.14, 3, 59);
-  const mountainPeak = (ridge * 16.5 + detail * 4.2) * slopeRamp;
-  const foothills = fbm2d(x * 0.085, z * 0.085, 3, 31) * 2.6 * corridorCarve;
+  const mountainPeak = (ridge * 16.2 + detail * 4.0) * slopeRamp;
+  const foothills = fbm2d(x * 0.085, z * 0.085, 3, 31) * 2.4 * corridorCarve;
 
-  const roadBedFlat = absX <= 2.5 ? 0 : foothills + mountainPeak;
+  const canyonDrop = canyonMask * -2.35 * (1 - corridorCarve * 0.72);
+  const riverCenterX = Math.sin(z * 0.065) * 3.8;
   const valleyRiverCut =
-    z < -44 && z > -132
-      ? Math.exp(-Math.pow((x - Math.sin(z * 0.07) * 2.6) * 0.48, 2)) * -1.45
-      : 0;
+    canyonMask * Math.exp(-Math.pow((x - riverCenterX) * 0.38, 2)) * -1.35;
 
-  const fadeOutEdge =
-    z < -138 ? 1 - THREE.MathUtils.smoothstep(-z, 138, 168) : 1;
+  const baseTargetY = THREE.MathUtils.lerp(-0.07, 0.15, airportMask);
+  const terrainHeight =
+    absRel <= flatHalfW
+      ? baseTargetY + canyonDrop + valleyRiverCut
+      : baseTargetY + foothills + mountainPeak + canyonDrop + valleyRiverCut;
 
-  return (roadBedFlat + canyonDrop * (1 - corridorCarve * 0.65) + valleyRiverCut) * fadeOutEdge - 0.08;
+  const fadeOutEdge = z < -166 ? THREE.MathUtils.smoothstep(-z, 166, 178) : 0;
+  return THREE.MathUtils.lerp(terrainHeight, -5.2, fadeOutEdge);
 }
 
 function configureTexture(

@@ -18,6 +18,7 @@ All 3D textures and material maps stored under `public/assets/textures/` are ope
 | `textures/planets/moon_2k.jpg` | Moon Surface Map (2K) | [Solar System Scope](https://www.solarsystemscope.com/textures/) | CC BY 4.0 |
 | `textures/planets/venus_2k.jpg` | Venus Atmosphere Map (2K) | [Solar System Scope](https://www.solarsystemscope.com/textures/) | CC BY 4.0 |
 | `textures/planets/mercury_2k.jpg` | Mercury Surface Map (2K) | [Solar System Scope](https://www.solarsystemscope.com/textures/) | CC BY 4.0 |
+| `textures/planets/neptune_2k.jpg` | Ice-Giant Exoplanet / Neptune Surface Map (2K) | [Solar System Scope](https://www.solarsystemscope.com/textures/) | CC BY 4.0 |
 | `textures/planets/milky_way_2k.jpg` | Milky Way Equirectangular Skybox (2K) | [Solar System Scope](https://www.solarsystemscope.com/textures/) | CC BY 4.0 |
 
 ## Environment & Structural PBR Materials
